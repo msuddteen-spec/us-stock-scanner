@@ -1,0 +1,10 @@
+.venv/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.coverage
+.env
+data/*.jsonl
+data/*.csv
+data/watchlist.json
