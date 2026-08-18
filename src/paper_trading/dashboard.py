@@ -249,6 +249,29 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
       })();
     </script>
     """, unsafe_allow_javascript=True)
+    try:
+        active_theme = st.context.theme.type
+    except Exception:
+        active_theme = "light"
+    if active_theme == "dark":
+        st.html("""
+        <style>
+          :root, body, [data-testid="stAppViewContainer"] { background: #071426 !important; }
+          [data-testid="stAppViewContainer"] {
+            background:
+              radial-gradient(circle at 8% 0%, rgba(20,184,166,.16), transparent 34%),
+              radial-gradient(circle at 96% 18%, rgba(96,165,250,.12), transparent 30%),
+              linear-gradient(180deg, #071426 0%, #0b1428 100%) !important;
+          }
+          [data-testid="stMain"] { color: #e7eef9 !important; }
+          [data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3,
+          [data-testid="stMain"] h4, [data-testid="stMain"] p, [data-testid="stMain"] label { color: #e7eef9 !important; }
+          [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: #a8bad0 !important; }
+          .st-key-save_main_watchlist button { color: #e7eef9 !important; background: #14213d !important; border-color: #40617d !important; }
+          .st-key-watchlist_ticker_search [data-baseweb="select"] { color: #e7eef9 !important; background: #14213d !important; border-color: #40617d !important; }
+          .st-key-watchlist_ticker_search input { color: #e7eef9 !important; }
+        </style>
+        """)
     scan_from_main = scan_from_toolbar or stock_pulse_hero(ready=bool(settings))
 
     @st.cache_data(ttl="6h", max_entries=1, show_spinner=False)

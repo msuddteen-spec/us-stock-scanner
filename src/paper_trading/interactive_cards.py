@@ -18,14 +18,14 @@ _CSS = """
 :host { display: block; width: 100%; }
 .deck-root {
   position: relative; height: 540px; overflow: hidden; border-radius: 28px;
-  background: linear-gradient(145deg, rgba(238,250,251,.96) 0%, rgba(235,246,252,.92) 56%, rgba(218,244,240,.9) 150%);
+  background: linear-gradient(145deg, var(--st-secondary-background-color,rgba(238,250,251,.96)) 0%, var(--st-background-color,rgba(235,246,252,.92)) 56%, var(--st-primary-background-color,rgba(218,244,240,.9)) 150%);
   touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; isolation: isolate;
   box-shadow: none; border: 0;
 }
 .three-canvas { position:absolute; inset:0; width:100%; height:100%; opacity:.82; pointer-events:none; }
-.deck-ui { position:absolute; inset:0; z-index:1; padding:20px; color:#10233f; }
-.deck-label { font: 700 11px/1.2 var(--st-font, Inter, sans-serif); letter-spacing:.12em; color:#0f766e; }
-.deck-count { float:right; font: 600 12px/1.2 var(--st-font, Inter, sans-serif); color:#64748b; letter-spacing:0; }
+.deck-ui { position:absolute; inset:0; z-index:1; padding:20px; color:var(--st-text-color,#10233f); }
+.deck-label { font: 700 11px/1.2 var(--st-font, Inter, sans-serif); letter-spacing:.12em; color:var(--st-primary-color,#0f766e); }
+.deck-count { float:right; font: 600 12px/1.2 var(--st-font, Inter, sans-serif); color:var(--st-secondary-text-color,#64748b); letter-spacing:0; }
 .stock-card, .stock-card * {
   user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
 }
@@ -48,8 +48,8 @@ _CSS = """
 .level { padding:12px; border:1px solid #e2e8f0; border-radius:16px; background:#fff; }
 .level-value { margin-top:4px; font:800 18px/1 var(--st-font, Inter, sans-serif); letter-spacing:-.035em; }
 .reason { margin-top:auto; font:500 12px/1.4 var(--st-font, Inter, sans-serif); color:#475569; }
-.gesture { position:absolute; left:20px; right:20px; bottom:19px; display:flex; align-items:center; justify-content:space-between; font:600 12px/1.2 var(--st-font, Inter, sans-serif); color:#0f766e; }
-.dots { display:flex; gap:5px; }.dot { width:6px; height:6px; border-radius:999px; background:rgba(15,118,110,.22); }.dot.active { width:20px; background:#14b8a6; }
+.gesture { position:absolute; left:20px; right:20px; bottom:19px; display:flex; align-items:center; justify-content:space-between; font:600 12px/1.2 var(--st-font, Inter, sans-serif); color:var(--st-primary-color,#0f766e); }
+.dots { display:flex; gap:5px; }.dot { width:6px; height:6px; border-radius:999px; background:color-mix(in srgb, var(--st-primary-color,#0f766e) 22%, transparent); }.dot.active { width:20px; background:var(--st-primary-color,#14b8a6); }
 @media (max-width: 420px) { .deck-root { height:520px; } .stock-card { height:384px; top:59px; padding:20px; } .price { font-size:38px; } }
 """
 
