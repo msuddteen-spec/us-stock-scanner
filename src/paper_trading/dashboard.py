@@ -216,15 +216,15 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         return _rank_recommendations(engine.scan_many_realtime(liquid_symbols))[:5]
 
     @st.cache_data(max_entries=1, show_spinner=False)
-    def load_day_trade_recommendations(symbols: tuple[str, ...], _settings) -> list[dict]:
-        """Evaluate selected Day Trade stocks on recent 4-hour bars."""
+    def load_hourly_watchlist_recommendations(symbols: tuple[str, ...], _settings) -> list[dict]:
+        """Evaluate the watchlist with support/resistance from one-hour bars."""
         from .broker import AlpacaPaperBroker
         from .market_data import AlpacaMarketDataAdapter
         from .paper_engine import PaperTradingEngine
 
-        market_data = AlpacaMarketDataAdapter(_settings, timeframe="4Hour")
+        market_data = AlpacaMarketDataAdapter(_settings, timeframe="1Hour")
         engine = PaperTradingEngine(_settings, market_data, AlpacaPaperBroker(_settings), logger)
-        return _rank_recommendations(engine.scan_many_realtime(symbols))
+        return _rank_recommendations(engine.scan_many_realtime(symbols), limit=None)
 
     company_names: dict[str, str] = {}
     if settings:
@@ -259,16 +259,20 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         engine = PaperTradingEngine(settings, market_data, broker, logger)
         results = []
         failures = []
-        scan_universe = tuple(dict.fromkeys((*scan_symbols, *watchlist)))
-        for candidate in scan_universe:
+        for candidate in scan_symbols:
             try:
                 results.append(engine.scan_realtime(candidate, record_signal=record_signal))
             except Exception as exc:
                 failures.append(f"{candidate}: {exc}")
         top_results = [item for item in results if item["symbol"] in scan_symbols]
-        watch_results = [item for item in results if item["symbol"] in watchlist]
+        watch_results = []
+        if watchlist:
+            try:
+                watch_results = load_hourly_watchlist_recommendations(watchlist, settings)
+            except Exception as exc:
+                failures.append(f"watchlist: {exc}")
         st.session_state["top_recommendations"] = _rank_recommendations(top_results)
-        st.session_state["watch_recommendations"] = _rank_recommendations(watch_results)
+        st.session_state["watch_recommendations"] = watch_results
         st.session_state["scan_failures"] = failures
 
     if (scan_clicked or scan_from_main) and settings and scan_symbols:
@@ -283,8 +287,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     # Keep the daily picks dynamic: a manual refresh deliberately
                     # bypasses the hourly cache and ranks the market again.
                     load_daily_recommendations.clear()
-                    load_day_trade_recommendations.clear()
-                    st.session_state["day_trade_refresh_requested"] = True
+                    load_hourly_watchlist_recommendations.clear()
                     with st.spinner("กำลังสแกน Top 7..."):
                         refresh_realtime(record_signal=True)
                     st.success("สแกน Top 7 สำเร็จ — ไม่มีการส่งคำสั่ง")
@@ -321,41 +324,15 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                 except Exception as exc:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
             elif active_view == "Day Trade":
-                st.subheader("Day Trade — แนวรับ แนวต้าน")
-                st.caption("เลือกหุ้นเองจากรายการ Alpaca • บันทึกไว้ในเครื่องนี้ • วิเคราะห์แท่งราคา 4 ชั่วโมง • Paper Trading เท่านั้น")
-                from .interactive_cards import day_trade_picker
-                day_trade_options = tuple(sorted(dict.fromkeys(
-                    (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *watchlist)
-                )))
-                selected_day_trade = day_trade_picker(
-                    [{"symbol": symbol, "name": _company_name(symbol, company_names)} for symbol in day_trade_options],
-                    ("WDC",),
-                    key="day-trade-local-picker",
-                )
-                refresh_day_trade = st.session_state.pop("day_trade_refresh_requested", False)
-                saved_day_trade_symbols = tuple(st.session_state.get("day_trade_scan_symbols", ()))
-                if not selected_day_trade:
-                    st.info("เลือกหุ้นอย่างน้อย 1 ตัว แล้วกดรีเฟรชหุ้นเพื่อดูแนวรับ–แนวต้าน")
-                elif refresh_day_trade:
-                    try:
-                        with st.spinner("กำลังวิเคราะห์ Day Trade..."):
-                            day_trade_recommendations = load_day_trade_recommendations(selected_day_trade, settings)
-                        st.session_state["day_trade_recommendations"] = day_trade_recommendations
-                        st.session_state["day_trade_scan_symbols"] = selected_day_trade
-                        if day_trade_recommendations:
-                            _render_recommendation_cards(st, day_trade_recommendations, company_names, "day-trade")
-                        else:
-                            st.info("ยังไม่มีข้อมูลแท่งราคา 4 ชั่วโมงเพียงพอสำหรับหุ้นที่เลือก")
-                    except Exception as exc:
-                        st.warning(f"โหลดข้อมูล Day Trade ไม่สำเร็จ: {exc}")
-                elif saved_day_trade_symbols == selected_day_trade:
-                    day_trade_recommendations = st.session_state.get("day_trade_recommendations", [])
-                    if day_trade_recommendations:
-                        _render_recommendation_cards(st, day_trade_recommendations, company_names, "day-trade")
-                    else:
-                        st.info("กดรีเฟรชหุ้นเพื่อดูแนวรับ–แนวต้านของหุ้นที่เลือก")
+                st.subheader("Day Trade — หุ้นที่เล็งไว้")
+                st.caption("ใช้รายการเดียวกับแท็บหุ้นที่เล็งไว้ • แนวรับ–แนวต้านจากแท่งราคา 1 ชั่วโมง • กดรีเฟรชหุ้นเมื่อต้องการวิเคราะห์ใหม่")
+                watch_recommendations = st.session_state.get("watch_recommendations", [])
+                if watch_recommendations:
+                    _render_recommendation_cards(st, watch_recommendations, company_names, "watch-hourly")
+                elif watchlist:
+                    st.info("กดรีเฟรชหุ้นเพื่อวิเคราะห์หุ้นที่เล็งไว้ด้วยแท่งราคา 1 ชั่วโมง")
                 else:
-                    st.info("บันทึกหุ้นในเครื่องแล้ว — กดรีเฟรชหุ้นเพื่อโหลดแนวรับ–แนวต้าน")
+                    st.info("ยังไม่มีหุ้นที่เล็งไว้ — ไปที่แท็บหุ้นที่เล็งไว้เพื่อเพิ่ม ticker")
             else:
                 st.subheader("หุ้นที่เล็งไว้")
                 watchlist_options = tuple(sorted(dict.fromkeys(
@@ -384,7 +361,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                         st.error(str(exc))
                 watch_recommendations = st.session_state.get("watch_recommendations", [])
                 if watch_recommendations:
-                    _render_recommendation_cards(st, watch_recommendations, company_names, "watch")
+                    _render_recommendation_cards(st, watch_recommendations, company_names, "watch-hourly")
                 else:
                     st.info("ยังไม่มีข้อมูลของหุ้นที่เล็งไว้ กดสแกนเพื่ออัปเดต")
             failures = st.session_state.get("scan_failures", [])
@@ -395,10 +372,11 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
 
     render_realtime_panel()
 
-def _rank_recommendations(results: list[dict]) -> list[dict]:
+def _rank_recommendations(results: list[dict], *, limit: int | None = 7) -> list[dict]:
     """Put executable BUY setups first, then rank by signal confidence."""
     action_rank = {"BUY": 2, "HOLD": 1, "SELL": 0}
-    return sorted(results, key=lambda item: (action_rank.get(item["action"], 0), item["score"]), reverse=True)[:7]
+    ranked = sorted(results, key=lambda item: (action_rank.get(item["action"], 0), item["score"]), reverse=True)
+    return ranked if limit is None else ranked[:limit]
 
 
 def _recommendation_rows(items: list[dict], company_names: dict[str, str] | None = None) -> list[dict]:
