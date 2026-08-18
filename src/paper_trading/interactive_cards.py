@@ -350,11 +350,17 @@ export default function(component) {
   let state = dayTradePickerInstances.get(root);
   const options = data?.options || [];
   const optionMap = new Map(options.map(item => [String(item.symbol).toUpperCase(), item]));
+  let restoredFromStorage = false;
   if (!state) {
-    state = { selected: normaliseSymbols(data?.selected), query: "" };
+    const providedSymbols = normaliseSymbols(data?.selected);
+    state = { selected: providedSymbols, query: "" };
     try {
       const saved = JSON.parse(localStorage.getItem(dayTradeStorageKey) || "null");
-      if (Array.isArray(saved)) state.selected = normaliseSymbols(saved);
+      if (Array.isArray(saved)) {
+        const savedSymbols = normaliseSymbols(saved);
+        restoredFromStorage = JSON.stringify(savedSymbols) !== JSON.stringify(providedSymbols);
+        state.selected = savedSymbols;
+      }
     } catch (_) { /* Use the server-provided default when storage is unavailable. */ }
     state.selected = normaliseSymbols(state.selected);
     dayTradePickerInstances.set(root, state);
@@ -418,6 +424,7 @@ export default function(component) {
     if (/^[A-Z0-9.]{1,10}$/.test(custom) && !optionMap.has(custom)) { state.query = ""; toggle(custom); setOpen(true); }
   };
   root.onfocusout = event => { if (!root.contains(event.relatedTarget)) setOpen(false); };
+  if (restoredFromStorage) setStateValue("symbols", state.selected);
   render();
 }
 """

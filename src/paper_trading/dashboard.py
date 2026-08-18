@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
-from pathlib import Path
 import re
 from zoneinfo import ZoneInfo
 
@@ -45,32 +43,6 @@ def _display_reason(reason: str) -> str:
         "position is open; no exit condition": "มีสถานะเปิดอยู่ แต่ยังไม่พบเงื่อนไขขาย",
     }
     return translations.get(reason, reason)
-
-
-WATCHLIST_PATH = Path("data/watchlist.json")
-
-
-def _load_watchlist(default: tuple[str, ...]) -> tuple[str, ...]:
-    if not WATCHLIST_PATH.exists():
-        return default
-    try:
-        values = json.loads(WATCHLIST_PATH.read_text(encoding="utf-8"))
-        return tuple(dict.fromkeys(str(value).strip().upper() for value in values if str(value).strip()))
-    except (OSError, ValueError, TypeError):
-        return default
-
-
-def _save_watchlist(raw_value: str) -> tuple[str, ...]:
-    symbols = tuple(dict.fromkeys(
-        symbol.upper()
-        for symbol in (part.strip() for part in raw_value.split(","))
-        if re.fullmatch(r"[A-Z0-9.]{1,10}", symbol)
-    ))
-    if not symbols:
-        raise ValueError("กรุณาระบุ ticker อย่างน้อย 1 ตัว เช่น AAPL, MSFT")
-    WATCHLIST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    WATCHLIST_PATH.write_text(json.dumps(symbols, ensure_ascii=False, indent=2), encoding="utf-8")
-    return symbols
 
 
 def _ticker_with_company(symbol: str, company_names: dict[str, str]) -> str:
@@ -140,9 +112,18 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         config_error = str(exc)
 
     logger = TradeLogger(log_path)
-    watchlist = _load_watchlist(("WDC",) if settings else ())
     st.set_page_config(page_title="ระบบวิเคราะห์หุ้นสหรัฐ", page_icon=":material/query_stats:", layout="wide")
-    from .interactive_cards import stock_pulse_hero
+    from .interactive_cards import day_trade_picker, stock_pulse_hero
+    watchlist_state = st.session_state.get("watchlist_ticker_search")
+    saved_watchlist = watchlist_state.get("symbols") if isinstance(watchlist_state, dict) else None
+    if isinstance(saved_watchlist, (list, tuple)):
+        watchlist = tuple(dict.fromkeys(
+            symbol
+            for symbol in (str(value).strip().upper() for value in saved_watchlist)
+            if re.fullmatch(r"[A-Z0-9.]{1,10}", symbol)
+        ))
+    else:
+        watchlist = ("WDC",) if settings else ()
     scan_from_toolbar = st.button(
         "รีเฟรชหุ้น",
         key="header_refresh",
@@ -453,27 +434,17 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                 watchlist_options = tuple(sorted(dict.fromkeys(
                     (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *settings.symbols, *watchlist)
                 )))
-                st.caption(f"เลือกได้จากหุ้นสหรัฐที่ Alpaca รองรับ {len(company_names):,} ตัว หรือพิมพ์ ticker ใหม่เอง")
-                selected_watchlist = st.multiselect(
-                    "พิมพ์ค้นหา ticker แล้วเลือกจากรายการ",
-                    options=watchlist_options,
-                    default=[symbol for symbol in watchlist if symbol in watchlist_options],
-                    format_func=lambda symbol: _ticker_with_company(str(symbol), company_names),
-                    accept_new_options=True,
-                    help="เลือกจากรายการ หรือพิมพ์ ticker ใหม่ เช่น WDC แล้วกด Enter ได้เลย",
-                    placeholder="เช่น AAPL หรือ Apple",
+                picker_options = [
+                    {"symbol": symbol, "name": company_names.get(symbol, "")}
+                    for symbol in watchlist_options
+                ]
+                selected_watchlist = day_trade_picker(
+                    picker_options,
+                    default=watchlist,
                     key="watchlist_ticker_search",
                 )
-                if st.button("บันทึกรายการที่เล็งไว้", key="save_main_watchlist"):
-                    try:
-                        _save_watchlist(",".join(selected_watchlist))
-                        # The rerun below reloads the saved list. Request a scan so the
-                        # watchlist panel contains fresh cards instead of an empty state.
-                        st.session_state["manual_scan_requested"] = True
-                        st.success("บันทึกแล้ว — กำลังสแกนหุ้นที่เล็งไว้")
-                        st.rerun()
-                    except ValueError as exc:
-                        st.error(str(exc))
+                if tuple(selected_watchlist) != tuple(watchlist):
+                    st.session_state["manual_scan_requested"] = True
                 watch_recommendations = st.session_state.get("watch_recommendations", [])
                 if watch_recommendations:
                     _render_recommendation_cards(st, watch_recommendations, company_names, "watch-hourly")
