@@ -326,11 +326,12 @@ _DAY_TRADE_PICKER_CSS = """
 .clear-all,.dropdown-toggle { position:absolute; top:50%; transform:translateY(-50%); border:0; cursor:pointer; background:transparent; color:var(--st-secondary-text-color,#64748b); }
 .clear-all { right:28px; display:none; width:18px; height:18px; border-radius:50%; background:var(--st-secondary-text-color,#64748b); color:var(--st-background-color,#fff); font-size:14px; line-height:16px; }
 .dropdown-toggle { right:7px; width:22px; height:30px; font-size:20px; line-height:20px; }
-.picker-suggestions { display:none; gap:4px; margin-top:4px; max-height:158px; padding:5px; overflow:auto; border:1px solid var(--st-border-color,#cbd5e1); border-radius:8px; background:var(--st-background-color,#fff); box-shadow:0 8px 18px rgba(15,23,42,.14); }
+.picker-suggestions { display:none; gap:4px; margin-top:4px; max-height:250px; padding:6px; overflow:auto; border:2px solid var(--st-primary-color,#0f766e); border-radius:10px; background:var(--st-background-color,#fff); box-shadow:0 10px 24px rgba(15,23,42,.18); }
 .picker-suggestions.is-open { display:grid; }
-.suggestion { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid transparent; border-radius:6px; cursor:pointer; touch-action:manipulation; text-align:left; color:var(--st-text-color,#122033); background:transparent; font:600 12px var(--st-font,Inter,sans-serif); }
+.suggestion { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; width:100%; min-height:42px; box-sizing:border-box; padding:8px 10px; border:1px solid transparent; border-radius:7px; cursor:pointer; touch-action:manipulation; text-align:left; color:var(--st-text-color,#122033); background:transparent; font:600 13px var(--st-font,Inter,sans-serif); }
 .suggestion:hover,.suggestion.is-selected { border-color:var(--st-primary-color,#0f766e); background:var(--st-secondary-background-color,#f1f5f9); }
-.suggestion small { min-width:0; color:var(--st-secondary-text-color,#64748b); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.suggestion strong { color:var(--st-text-color,#122033); line-height:1.2; }
+.suggestion small { display:block; width:100%; min-width:0; color:var(--st-secondary-text-color,#64748b); font-size:11px; font-weight:500; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .picker-empty { padding:9px 10px; color:var(--st-secondary-text-color,#64748b); font-size:12px; }
 """
 
@@ -467,7 +468,7 @@ def day_trade_picker(options: list[dict[str, str]], default: tuple[str, ...], *,
         default={"symbols": list(current)},
         on_symbols_change=lambda: None,
         width="stretch",
-        height=176,
+        height="content",
     )
     selected = getattr(result, "symbols", None)
     if not isinstance(selected, (list, tuple)):
