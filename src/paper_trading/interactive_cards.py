@@ -140,9 +140,8 @@ export default function(component) {
     root.addEventListener("contextmenu", event => event.preventDefault());
     root.addEventListener("selectstart", event => event.preventDefault());
     root.addEventListener("wheel", event => {
-      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-      if (Math.abs(delta) < 12) return;
-      const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (delta > 0 ? 1 : -1)));
+      if (Math.abs(event.deltaX) < 12 || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (event.deltaX > 0 ? 1 : -1)));
       if (next !== state.index) { event.preventDefault(); state.index = next; state.render(); setStateValue("index", next); }
     }, { passive: false });
   }
@@ -177,7 +176,7 @@ export default function(component) {
 
 
 _STOCK_CARD_DECK = st.components.v2.component(
-    "threejs_stock_card_deck",
+    "threejs_stock_card_deck_horizontal",
     html=_HTML,
     css=_CSS,
     js=_JS,
