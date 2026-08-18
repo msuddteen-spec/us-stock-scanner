@@ -443,6 +443,19 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     default=watchlist,
                     key="watchlist_ticker_search",
                 )
+                if st.button(
+                    "บันทึกรายการที่เล็งไว้",
+                    key="save_main_watchlist",
+                    icon=":material/save:",
+                    width="content",
+                ):
+                    if not selected_watchlist:
+                        st.warning("กรุณาเลือก ticker อย่างน้อย 1 ตัว")
+                    else:
+                        # The picker already saves locally; this button starts
+                        # a fresh scan using the saved device-local selection.
+                        st.session_state["manual_scan_requested"] = True
+                        st.rerun()
                 if tuple(selected_watchlist) != tuple(watchlist):
                     st.session_state["manual_scan_requested"] = True
                 watch_recommendations = st.session_state.get("watch_recommendations", [])
