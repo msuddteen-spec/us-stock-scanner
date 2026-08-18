@@ -361,7 +361,6 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     load_watchlist_recommendations.clear()
                     with st.spinner("กำลังสแกน Top 7..."):
                         refresh_realtime(record_signal=True)
-                    st.success("สแกน Top 7 สำเร็จ — ไม่มีการส่งคำสั่ง")
                 elif "top_recommendations" not in st.session_state:
                     refresh_realtime(record_signal=False)
             except Exception as exc:
