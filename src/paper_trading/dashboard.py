@@ -165,7 +165,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
       [data-testid="stMain"] h4, [data-testid="stMain"] p, [data-testid="stMain"] label { color: #10233f !important; }
       [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: #5d7188 !important; }
       [data-testid="stSegmentedControl"] button {
-        color: #17324d !important; background: #edf5f9 !important; border-color: #a8c1d1 !important;
+        color: #ffffff !important; background: #10233f !important; border-color: #6f8da5 !important;
         text-shadow: none !important;
       }
       [data-testid="stSegmentedControl"] button[aria-pressed="true"] {
