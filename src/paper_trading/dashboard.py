@@ -215,7 +215,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         engine = PaperTradingEngine(_settings, market_data, AlpacaPaperBroker(_settings), logger)
         return _rank_recommendations(engine.scan_many_realtime(liquid_symbols))[:5]
 
-    @st.cache_data(ttl="1m", max_entries=1, show_spinner=False)
+    @st.cache_data(max_entries=1, show_spinner=False)
     def load_day_trade_recommendations(symbols: tuple[str, ...], _settings) -> list[dict]:
         """Evaluate the seven core stocks on recent 5-minute bars."""
         from .broker import AlpacaPaperBroker
@@ -320,7 +320,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
             elif active_view == "Day Trade":
                 st.subheader("Day Trade — แนวรับ แนวต้าน")
-                st.caption("วิเคราะห์แท่งราคา 5 นาทีของหุ้น 7 นางฟ้า • รีเฟรชได้ทุก 1 นาที • Paper Trading เท่านั้น")
+                st.caption("วิเคราะห์แท่งราคา 5 นาทีของหุ้น 7 นางฟ้า • กดรีเฟรชเพื่ออัปเดต • Paper Trading เท่านั้น")
                 try:
                     day_trade_recommendations = load_day_trade_recommendations(DEFAULT_TOP_SYMBOLS, settings)
                     if day_trade_recommendations:
