@@ -227,8 +227,8 @@ async function startHeroScene(root, state) {
     const renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.domElement.className = "hero-canvas"; root.prepend(renderer.domElement);
     const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(45, 1, .1, 100); camera.position.z = 5.4;
-    const group = new THREE.Group(); group.position.set(1.55, -.05, 0); group.scale.set(1.08, 1.08, 1); scene.add(group);
-    const gridMaterial = new THREE.LineBasicMaterial({color:0x60a5fa,transparent:true,opacity:.18});
+    const group = new THREE.Group(); group.position.set(0, -.05, 0); group.scale.set(2.1, 1.42, 1); scene.add(group);
+    const gridMaterial = new THREE.LineBasicMaterial({color:0x60a5fa,transparent:true,opacity:.13});
     for (let i = -2; i <= 2; i++) {
       const horizontal = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-2, i * .48, 0), new THREE.Vector3(2, i * .48, 0)]);
       const vertical = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i * .8, -1.1, 0), new THREE.Vector3(i * .8, 1.1, 0)]);
