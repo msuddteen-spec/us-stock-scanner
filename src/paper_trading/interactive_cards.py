@@ -328,7 +328,7 @@ _DAY_TRADE_PICKER_CSS = """
 .dropdown-toggle { right:7px; width:22px; height:30px; font-size:20px; line-height:20px; }
 .picker-suggestions { display:none; gap:4px; margin-top:4px; max-height:158px; padding:5px; overflow:auto; border:1px solid var(--st-border-color,#cbd5e1); border-radius:8px; background:var(--st-background-color,#fff); box-shadow:0 8px 18px rgba(15,23,42,.14); }
 .picker-suggestions.is-open { display:grid; }
-.suggestion { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid transparent; border-radius:6px; cursor:pointer; text-align:left; color:var(--st-text-color,#122033); background:transparent; font:600 12px var(--st-font,Inter,sans-serif); }
+.suggestion { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid transparent; border-radius:6px; cursor:pointer; touch-action:manipulation; text-align:left; color:var(--st-text-color,#122033); background:transparent; font:600 12px var(--st-font,Inter,sans-serif); }
 .suggestion:hover,.suggestion.is-selected { border-color:var(--st-primary-color,#0f766e); background:var(--st-secondary-background-color,#f1f5f9); }
 .suggestion small { min-width:0; color:var(--st-secondary-text-color,#64748b); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .picker-empty { padding:9px 10px; color:var(--st-secondary-text-color,#64748b); font-size:12px; }
@@ -409,7 +409,21 @@ export default function(component) {
         const button = document.createElement("button"); button.type = "button"; button.className = `suggestion${state.selected.includes(symbol) ? " is-selected" : ""}`;
         const ticker = document.createElement("strong"); ticker.textContent = state.selected.includes(symbol) ? `✓ ${symbol}` : symbol;
         const company = document.createElement("small"); company.textContent = item.name || "";
-        button.append(ticker, company); button.onclick = () => { state.query = ""; toggle(symbol); setOpen(true); input.focus(); }; suggestions.appendChild(button);
+        const choose = event => {
+          event.preventDefault();
+          event.stopPropagation();
+          state.query = "";
+          if (!state.selected.includes(symbol)) toggle(symbol);
+          setOpen(true);
+          input.focus({ preventScroll: true });
+        };
+        let pointerHandled = false;
+        button.onpointerdown = event => { pointerHandled = true; choose(event); };
+        button.onclick = event => {
+          if (pointerHandled) { pointerHandled = false; return; }
+          choose(event);
+        };
+        button.append(ticker, company); suggestions.appendChild(button);
       });
     }
   };
