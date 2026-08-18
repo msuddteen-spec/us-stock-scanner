@@ -278,23 +278,39 @@ _STOCK_PULSE_HERO = st.components.v2.component(
 
 _DAY_TRADE_PICKER_HTML = """
 <section class="day-trade-picker" aria-label="เลือกหุ้น Day Trade">
-  <div class="picker-title">เลือกหุ้น Day Trade</div>
-  <div class="picker-subtitle">รายการนี้บันทึกอัตโนมัติไว้ในเครื่องนี้</div>
-  <div class="selected-symbols"></div>
-  <input class="picker-search" type="search" autocomplete="off" placeholder="พิมพ์ค้นหา ticker หรือชื่อบริษัท" aria-label="ค้นหาหุ้น Day Trade">
-  <div class="picker-suggestions"></div>
+  <div class="picker-label">พิมพ์ค้นหา ticker แล้วเลือกจากรายการ <span class="help" title="รายการนี้บันทึกไว้ในเครื่องนี้">?</span></div>
+  <div class="picker-select" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+    <div class="selected-symbols"></div>
+    <input class="picker-search" type="search" autocomplete="off" placeholder="พิมพ์ค้นหา ticker หรือชื่อบริษัท" aria-label="ค้นหาหุ้น Day Trade">
+    <button class="clear-all" type="button" aria-label="ล้างรายการที่เลือก">×</button>
+    <button class="dropdown-toggle" type="button" aria-label="เปิดรายการหุ้น">⌄</button>
+  </div>
+  <div class="picker-suggestions" role="listbox"></div>
 </section>
 """
 
 
 _DAY_TRADE_PICKER_CSS = """
 :host { display:block; width:100%; }
-.day-trade-picker { padding:16px; border:1px solid var(--st-border-color,#d8e2ec); border-radius:18px; background:var(--st-secondary-background-color,#f1f5f9); color:var(--st-text-color,#122033); font-family:var(--st-font,Inter,sans-serif); }
-.picker-title { font-weight:800; font-size:15px; }.picker-subtitle { margin-top:4px; color:var(--st-secondary-text-color,#64748b); font-size:12px; }
-.selected-symbols { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 10px; min-height:24px; }
-.selected-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 9px; border-radius:999px; color:#0f3d3a; background:#ccfbf1; font-size:12px; font-weight:800; }.selected-chip button { border:0; padding:0; cursor:pointer; color:#0f766e; background:transparent; font-size:15px; line-height:1; }
-.picker-search { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--st-border-color,#cbd5e1); border-radius:12px; outline:none; color:var(--st-text-color,#122033); background:var(--st-background-color,#fff); font:500 13px var(--st-font,Inter,sans-serif); }.picker-search:focus { border-color:var(--st-primary-color,#0f766e); box-shadow:0 0 0 3px rgba(20,184,166,.14); }
-.picker-suggestions { display:grid; gap:5px; margin-top:8px; max-height:132px; overflow:auto; }.suggestion { display:flex; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid transparent; border-radius:10px; cursor:pointer; text-align:left; color:var(--st-text-color,#122033); background:var(--st-background-color,#fff); font:600 12px var(--st-font,Inter,sans-serif); }.suggestion:hover { border-color:var(--st-primary-color,#0f766e); }.suggestion small { color:var(--st-secondary-text-color,#64748b); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.day-trade-picker { color:var(--st-text-color,#122033); font-family:var(--st-font,Inter,sans-serif); }
+.picker-label { display:flex; align-items:center; gap:6px; margin:0 0 7px; font-size:13px; font-weight:700; }
+.help { display:inline-grid; place-items:center; width:15px; height:15px; border:1px solid var(--st-secondary-text-color,#64748b); border-radius:50%; color:var(--st-secondary-text-color,#64748b); font-size:10px; font-weight:800; }
+.picker-select { position:relative; display:flex; align-items:center; min-height:48px; box-sizing:border-box; padding:5px 42px 5px 7px; border:1px solid var(--st-border-color,#cbd5e1); border-radius:8px; background:var(--st-background-color,#fff); color:var(--st-text-color,#122033); cursor:text; }
+.picker-select.is-open { border-color:var(--st-primary-color,#0f766e); box-shadow:0 0 0 1px var(--st-primary-color,#0f766e); }
+.selected-symbols { display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:5px; min-width:0; }
+.selected-chip { display:inline-flex; align-items:center; max-width:100%; gap:5px; padding:6px 9px; border-radius:7px; color:var(--st-text-color,#122033); background:var(--st-primary-color,#14b8a6); font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.selected-chip span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.selected-chip button { flex:0 0 auto; border:0; padding:0; cursor:pointer; color:currentColor; background:transparent; font-size:16px; line-height:1; }
+.picker-search { flex:1; min-width:100px; width:100%; box-sizing:border-box; padding:7px 4px; border:0; outline:none; color:var(--st-text-color,#122033); background:transparent; font:500 13px var(--st-font,Inter,sans-serif); }
+.picker-search::placeholder { color:var(--st-secondary-text-color,#64748b); }
+.clear-all,.dropdown-toggle { position:absolute; top:50%; transform:translateY(-50%); border:0; cursor:pointer; background:transparent; color:var(--st-secondary-text-color,#64748b); }
+.clear-all { right:28px; display:none; width:18px; height:18px; border-radius:50%; background:var(--st-secondary-text-color,#64748b); color:var(--st-background-color,#fff); font-size:14px; line-height:16px; }
+.dropdown-toggle { right:7px; width:22px; height:30px; font-size:20px; line-height:20px; }
+.picker-suggestions { display:none; gap:4px; margin-top:4px; max-height:158px; padding:5px; overflow:auto; border:1px solid var(--st-border-color,#cbd5e1); border-radius:8px; background:var(--st-background-color,#fff); box-shadow:0 8px 18px rgba(15,23,42,.14); }
+.picker-suggestions.is-open { display:grid; }
+.suggestion { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid transparent; border-radius:6px; cursor:pointer; text-align:left; color:var(--st-text-color,#122033); background:transparent; font:600 12px var(--st-font,Inter,sans-serif); }
+.suggestion:hover,.suggestion.is-selected { border-color:var(--st-primary-color,#0f766e); background:var(--st-secondary-background-color,#f1f5f9); }
+.suggestion small { min-width:0; color:var(--st-secondary-text-color,#64748b); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .picker-empty { padding:9px 10px; color:var(--st-secondary-text-color,#64748b); font-size:12px; }
 """
 
@@ -323,9 +339,13 @@ export default function(component) {
     state.selected = normaliseSymbols(state.selected);
     dayTradePickerInstances.set(root, state);
   }
+  const select = root.querySelector(".picker-select");
   const chips = root.querySelector(".selected-symbols");
   const input = root.querySelector(".picker-search");
   const suggestions = root.querySelector(".picker-suggestions");
+  const clearAll = root.querySelector(".clear-all");
+  const dropdownToggle = root.querySelector(".dropdown-toggle");
+  const setOpen = value => { state.open = value; select.classList.toggle("is-open", value); suggestions.classList.toggle("is-open", value); select.setAttribute("aria-expanded", String(value)); render(); };
   const emit = () => {
     try { localStorage.setItem(dayTradeStorageKey, JSON.stringify(state.selected)); } catch (_) {}
     setStateValue("symbols", state.selected);
@@ -340,12 +360,14 @@ export default function(component) {
   const render = () => {
     chips.replaceChildren();
     state.selected.forEach(symbol => {
-      const chip = document.createElement("span"); chip.className = "selected-chip";
-      const label = document.createElement("span"); label.textContent = symbol;
+      const chip = document.createElement("span"); chip.className = "selected-chip"; chip.title = optionMap.get(symbol)?.name || symbol;
+      const label = document.createElement("span"); label.textContent = optionMap.get(symbol)?.name ? `${symbol} — ${optionMap.get(symbol).name}` : symbol;
       const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "×"; remove.setAttribute("aria-label", `ลบ ${symbol}`); remove.onclick = () => toggle(symbol);
       chip.append(label, remove); chips.appendChild(chip);
     });
     input.value = state.query;
+    input.placeholder = state.selected.length ? "" : "พิมพ์ค้นหา ticker หรือชื่อบริษัท";
+    clearAll.style.display = state.selected.length ? "block" : "none";
     const query = state.query.toLowerCase().trim();
     const matches = options.filter(item => {
       const symbol = String(item.symbol || "").toLowerCase();
@@ -358,19 +380,24 @@ export default function(component) {
     } else {
       matches.forEach(item => {
         const symbol = String(item.symbol).toUpperCase();
-        const button = document.createElement("button"); button.type = "button"; button.className = "suggestion";
+        const button = document.createElement("button"); button.type = "button"; button.className = `suggestion${state.selected.includes(symbol) ? " is-selected" : ""}`;
         const ticker = document.createElement("strong"); ticker.textContent = state.selected.includes(symbol) ? `✓ ${symbol}` : symbol;
         const company = document.createElement("small"); company.textContent = item.name || "";
-        button.append(ticker, company); button.onclick = () => toggle(symbol); suggestions.appendChild(button);
+        button.append(ticker, company); button.onclick = () => { toggle(symbol); setOpen(true); input.focus(); }; suggestions.appendChild(button);
       });
     }
   };
-  input.oninput = event => { state.query = event.target.value; render(); };
+  select.onclick = event => { if (event.target.closest("button")) return; setOpen(true); input.focus(); };
+  dropdownToggle.onclick = () => { setOpen(!state.open); if (state.open) input.focus(); };
+  clearAll.onclick = () => { state.selected = []; emit(); setOpen(true); input.focus(); };
+  input.onfocus = () => setOpen(true);
+  input.oninput = event => { state.query = event.target.value; setOpen(true); };
   input.onkeydown = event => {
     if (event.key !== "Enter") return;
     const custom = state.query.trim().toUpperCase();
-    if (/^[A-Z0-9.]{1,10}$/.test(custom) && !optionMap.has(custom)) { state.query = ""; toggle(custom); }
+    if (/^[A-Z0-9.]{1,10}$/.test(custom) && !optionMap.has(custom)) { state.query = ""; toggle(custom); setOpen(true); }
   };
+  root.onfocusout = event => { if (!root.contains(event.relatedTarget)) setOpen(false); };
   render();
 }
 """
@@ -394,7 +421,7 @@ def day_trade_picker(options: list[dict[str, str]], default: tuple[str, ...], *,
         default={"symbols": list(current)},
         on_symbols_change=lambda: None,
         width="stretch",
-        height=190,
+        height=176,
     )
     selected = getattr(result, "symbols", None)
     if not isinstance(selected, (list, tuple)):
