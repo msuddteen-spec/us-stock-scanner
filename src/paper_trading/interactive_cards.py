@@ -202,7 +202,7 @@ _HERO_HTML = """
 
 _HERO_CSS = """
 :host { display:block; width:100%; }
-.pulse-hero { position:relative; min-height:205px; overflow:hidden; isolation:isolate; border:1px solid rgba(45,212,191,.32); border-radius:26px; padding:21px 21px 24px; box-sizing:border-box; color:#effcff; background:linear-gradient(128deg,#071426 0%,#0e2540 54%,#0d766e 160%); box-shadow:0 20px 46px rgba(2,8,23,.34); }
+.pulse-hero { position:relative; min-height:205px; overflow:hidden; isolation:isolate; border:1px solid rgba(45,212,191,.22); border-radius:26px; padding:21px 21px 24px; box-sizing:border-box; color:#effcff; background:linear-gradient(128deg,#071426 0%,#0e2540 54%,#0d766e 160%); box-shadow:none; }
 .hero-canvas { position:absolute; inset:0; z-index:-1; width:100%; height:100%; opacity:.82; pointer-events:none; }
 .hero-copy { max-width:620px; }
 .hero-kicker { display:flex; align-items:center; gap:7px; font:800 11px/1.2 var(--st-font,Inter,sans-serif); letter-spacing:.13em; color:#a5f3fc; }
