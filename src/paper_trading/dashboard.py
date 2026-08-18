@@ -217,12 +217,12 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
 
     @st.cache_data(max_entries=1, show_spinner=False)
     def load_day_trade_recommendations(symbols: tuple[str, ...], _settings) -> list[dict]:
-        """Evaluate the seven core stocks on recent 5-minute bars."""
+        """Evaluate selected Day Trade stocks on recent 4-hour bars."""
         from .broker import AlpacaPaperBroker
         from .market_data import AlpacaMarketDataAdapter
         from .paper_engine import PaperTradingEngine
 
-        market_data = AlpacaMarketDataAdapter(_settings, timeframe="5Min")
+        market_data = AlpacaMarketDataAdapter(_settings, timeframe="4Hour")
         engine = PaperTradingEngine(_settings, market_data, AlpacaPaperBroker(_settings), logger)
         return _rank_recommendations(engine.scan_many_realtime(symbols))
 
@@ -322,7 +322,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
             elif active_view == "Day Trade":
                 st.subheader("Day Trade — แนวรับ แนวต้าน")
-                st.caption("เลือกหุ้นเองจากรายการ Alpaca • บันทึกไว้ในเครื่องนี้ • วิเคราะห์แท่งราคา 5 นาที • Paper Trading เท่านั้น")
+                st.caption("เลือกหุ้นเองจากรายการ Alpaca • บันทึกไว้ในเครื่องนี้ • วิเคราะห์แท่งราคา 4 ชั่วโมง • Paper Trading เท่านั้น")
                 from .interactive_cards import day_trade_picker
                 day_trade_options = tuple(sorted(dict.fromkeys(
                     (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *watchlist)
@@ -345,7 +345,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                         if day_trade_recommendations:
                             _render_recommendation_cards(st, day_trade_recommendations, company_names, "day-trade")
                         else:
-                            st.info("ยังไม่มีข้อมูลแท่งราคา 5 นาทีเพียงพอสำหรับหุ้นที่เลือก")
+                            st.info("ยังไม่มีข้อมูลแท่งราคา 4 ชั่วโมงเพียงพอสำหรับหุ้นที่เลือก")
                     except Exception as exc:
                         st.warning(f"โหลดข้อมูล Day Trade ไม่สำเร็จ: {exc}")
                 elif saved_day_trade_symbols == selected_day_trade:

@@ -59,11 +59,14 @@ class AlpacaMarketDataAdapter:
         self._latest_trade_request = StockLatestTradeRequest
         self._snapshot_request = StockSnapshotRequest
         requested_timeframe = timeframe or settings.timeframe
-        self._intraday = requested_timeframe in {"1Min", "5Min"}
+        self._requested_timeframe = requested_timeframe
+        self._intraday = requested_timeframe in {"1Min", "5Min", "4Hour"}
         if requested_timeframe == "1Min":
             self._timeframe = TimeFrame.Minute
         elif requested_timeframe == "5Min":
             self._timeframe = TimeFrame(5, TimeFrameUnit.Minute)
+        elif requested_timeframe == "4Hour":
+            self._timeframe = TimeFrame(4, TimeFrameUnit.Hour)
         elif requested_timeframe == "1Day":
             self._timeframe = TimeFrame.Day
         else:
@@ -83,7 +86,14 @@ class AlpacaMarketDataAdapter:
         # bars after sorting instead.
         # Intraday mode only needs recent sessions; requesting a year of minute
         # bars would be slow and can exceed the provider's response limits.
-        lookback_window_days = max(14, (limit * 5 + 77) // 78) if self._intraday else max(365, limit * 3)
+        if self._requested_timeframe == "4Hour":
+            # US regular hours produce roughly two 4-hour bars per session.
+            # Keep enough calendar history for the 60-bar support/resistance window.
+            lookback_window_days = max(120, limit * 2)
+        elif self._intraday:
+            lookback_window_days = max(14, (limit * 5 + 77) // 78)
+        else:
+            lookback_window_days = max(365, limit * 3)
         start = end - timedelta(days=lookback_window_days)
         requested = tuple(dict.fromkeys(symbol.upper() for symbol in symbols))
         result: dict[str, list[Bar]] = {symbol: [] for symbol in requested}
