@@ -236,31 +236,6 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
             scan_symbols = ()
             scan_clicked = False
 
-    if settings:
-        st.subheader("แก้ไขหุ้นที่เล็งไว้")
-        watchlist_options = tuple(sorted(dict.fromkeys((*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *settings.symbols, *watchlist))))
-        st.caption(f"เลือกได้จากหุ้นสหรัฐที่ Alpaca รองรับ {len(company_names):,} ตัว หรือพิมพ์ ticker ใหม่เอง")
-        selected_watchlist = st.multiselect(
-            "พิมพ์ค้นหา ticker แล้วเลือกจากรายการ",
-            options=watchlist_options,
-            default=[symbol for symbol in watchlist if symbol in watchlist_options],
-            format_func=lambda symbol: _ticker_with_company(str(symbol), company_names),
-            accept_new_options=True,
-            help="เลือกจากรายการ หรือพิมพ์ ticker ใหม่ เช่น WDC แล้วกด Enter ได้เลย",
-            placeholder="เช่น AAPL หรือ Apple",
-        )
-        if st.button("บันทึกรายการที่เล็งไว้", key="save_main_watchlist"):
-            try:
-                _save_watchlist(",".join(selected_watchlist))
-                # The rerun below reloads the saved list. Request a scan so the
-                # watchlist panel contains fresh cards instead of an empty state.
-                st.session_state["manual_scan_requested"] = True
-                st.session_state["mobile_stock_view"] = "หุ้นที่เล็งไว้"
-                st.success("บันทึกแล้ว — กำลังสแกนหุ้นที่เล็งไว้")
-                st.rerun()
-            except ValueError as exc:
-                st.error(str(exc))
-
     def refresh_realtime(record_signal: bool = False):
         from .broker import AlpacaPaperBroker
         from .market_data import AlpacaMarketDataAdapter
@@ -331,6 +306,30 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
             else:
                 st.subheader("หุ้นที่เล็งไว้")
+                watchlist_options = tuple(sorted(dict.fromkeys(
+                    (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *settings.symbols, *watchlist)
+                )))
+                st.caption(f"เลือกได้จากหุ้นสหรัฐที่ Alpaca รองรับ {len(company_names):,} ตัว หรือพิมพ์ ticker ใหม่เอง")
+                selected_watchlist = st.multiselect(
+                    "พิมพ์ค้นหา ticker แล้วเลือกจากรายการ",
+                    options=watchlist_options,
+                    default=[symbol for symbol in watchlist if symbol in watchlist_options],
+                    format_func=lambda symbol: _ticker_with_company(str(symbol), company_names),
+                    accept_new_options=True,
+                    help="เลือกจากรายการ หรือพิมพ์ ticker ใหม่ เช่น WDC แล้วกด Enter ได้เลย",
+                    placeholder="เช่น AAPL หรือ Apple",
+                    key="watchlist_ticker_search",
+                )
+                if st.button("บันทึกรายการที่เล็งไว้", key="save_main_watchlist"):
+                    try:
+                        _save_watchlist(",".join(selected_watchlist))
+                        # The rerun below reloads the saved list. Request a scan so the
+                        # watchlist panel contains fresh cards instead of an empty state.
+                        st.session_state["manual_scan_requested"] = True
+                        st.success("บันทึกแล้ว — กำลังสแกนหุ้นที่เล็งไว้")
+                        st.rerun()
+                    except ValueError as exc:
+                        st.error(str(exc))
                 watch_recommendations = st.session_state.get("watch_recommendations", [])
                 if watch_recommendations:
                     _render_recommendation_cards(st, watch_recommendations, company_names, "watch")
