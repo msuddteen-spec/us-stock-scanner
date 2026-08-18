@@ -176,7 +176,7 @@ export default function(component) {
 
 
 _STOCK_CARD_DECK = st.components.v2.component(
-    "threejs_stock_card_deck_horizontal",
+    "threejs_stock_card_deck_horizontal_v2",
     html=_HTML,
     css=_CSS,
     js=_JS,
