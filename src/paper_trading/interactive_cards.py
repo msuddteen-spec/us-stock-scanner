@@ -213,7 +213,7 @@ _HERO_CSS = """
 .hero-actions { position:absolute; right:20px; top:20px; display:flex; align-items:center; gap:10px; }
 .refresh-button { appearance:none; border:1px solid rgba(153,246,228,.55); border-radius:999px; padding:11px 16px; cursor:pointer; color:#052e2b; background:linear-gradient(135deg,#99f6e4,#2dd4bf); box-shadow:0 9px 20px rgba(20,184,166,.28); font:800 13px/1 var(--st-font,Inter,sans-serif); transition:transform .18s ease,box-shadow .18s ease; }.refresh-button:hover { transform:translateY(-2px); box-shadow:0 13px 26px rgba(20,184,166,.38); }.refresh-button:active { transform:translateY(0) scale(.98); }.refresh-button:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 .refresh-icon { display:inline-block; margin-right:5px; font-size:18px; line-height:8px; vertical-align:-2px; }
-@media (max-width:600px) { .pulse-hero { min-height:196px; padding:18px; border-radius:23px; }.hero-actions { position:static; margin-top:14px; justify-content:flex-end; }.pulse-hero h1 { font-size:29px; } }
+@media (max-width:600px) { .pulse-hero { min-height:174px; padding:14px 18px; border-radius:23px; }.hero-actions { position:static; margin-top:8px; justify-content:flex-end; }.pulse-hero h1 { margin:8px 0 4px; font-size:28px; } }
 """
 
 
@@ -297,6 +297,6 @@ def stock_pulse_hero(*, ready: bool, key: str = "stock-pulse-hero") -> bool:
         key=key,
         on_refresh_change=lambda: None,
         width="stretch",
-        height=210,
+        height=190,
     )
     return bool(getattr(result, "refresh", False))
