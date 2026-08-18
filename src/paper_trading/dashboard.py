@@ -137,7 +137,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         config_error = str(exc)
 
     logger = TradeLogger(log_path)
-    watchlist = _load_watchlist(DEFAULT_TOP_SYMBOLS if settings else ())
+    watchlist = _load_watchlist(("WDC",) if settings else ())
     st.set_page_config(page_title="ระบบวิเคราะห์หุ้นสหรัฐ", page_icon=":material/query_stats:", layout="wide")
     from .interactive_cards import stock_pulse_hero
     scan_from_toolbar = st.button(
@@ -226,7 +226,9 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         st.header(":material/query_stats: สแกนหุ้นเด่น")
         st.caption("จัดอันดับจากข้อมูลล่าสุด — ไม่ส่งคำสั่งซื้อขาย")
         if settings:
-            scan_symbols = tuple(dict.fromkeys((*settings.symbols, *DEFAULT_TOP_SYMBOLS)))[:7]
+            # Keep this section strictly to the seven Magnificent Seven stocks.
+            # User watchlist symbols must never replace one of these seven cards.
+            scan_symbols = DEFAULT_TOP_SYMBOLS
             st.caption("หุ้นที่สแกน: " + ", ".join(scan_symbols))
             st.caption("กดปุ่มรีเฟรชด้านบนเมื่อต้องการข้อมูลล่าสุด")
             scan_clicked = False
