@@ -120,7 +120,7 @@ def _render_recommendation_cards(st, items: list[dict], company_names: dict[str,
         }
         for item in items
     ]
-    st.caption(f"การ์ดทั้งหมด {len(deck_items)} ตัว — ใช้นิ้วปัดขึ้น–ลงเพื่อเปลี่ยนหุ้น")
+    st.caption(f"การ์ดทั้งหมด {len(deck_items)} ตัว — ใช้นิ้วปัดซ้าย–ขวาเพื่อเปลี่ยนหุ้น")
     stock_card_deck(deck_items, key=f"threejs-deck-{section_key}")
 
 

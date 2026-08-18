@@ -8,7 +8,7 @@ import streamlit as st
 
 
 _HTML = """
-<div class="deck-root" role="region" aria-label="รายการหุ้นแบบปัดขึ้นลง">
+<div class="deck-root" role="region" aria-label="รายการหุ้นแบบปัดซ้ายขวา">
   <div class="deck-ui"></div>
 </div>
 """
@@ -19,7 +19,7 @@ _CSS = """
 .deck-root {
   position: relative; height: 540px; overflow: hidden; border-radius: 28px;
   background: linear-gradient(145deg, #0b1428 0%, #14213d 56%, #0e7490 150%);
-  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; isolation: isolate;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; isolation: isolate;
   box-shadow: 0 20px 55px rgba(15, 23, 42, .23);
 }
 .three-canvas { position:absolute; inset:0; width:100%; height:100%; opacity:.82; pointer-events:none; }
@@ -116,27 +116,33 @@ export default function(component) {
   if (!root) return;
   let state = deckInstances.get(root);
   if (!state) {
-    state = { root, index: 0, cards: [], startY: null, destroyed: false, cleanupThree: null };
+    state = { root, index: 0, cards: [], startPoint: null, destroyed: false, cleanupThree: null };
     deckInstances.set(root, state); startThreeBackground(root, state);
     root.addEventListener("pointerdown", event => {
-      event.preventDefault(); state.startY = event.clientY; root.setPointerCapture?.(event.pointerId);
+      state.startPoint = { x: event.clientX, y: event.clientY }; root.setPointerCapture?.(event.pointerId);
     }, { passive: false });
     root.addEventListener("pointermove", event => {
-      if (state.startY !== null) event.preventDefault();
+      if (!state.startPoint) return;
+      const horizontalDistance = Math.abs(event.clientX - state.startPoint.x);
+      const verticalDistance = Math.abs(event.clientY - state.startPoint.y);
+      if (horizontalDistance > verticalDistance) event.preventDefault();
     }, { passive: false });
     root.addEventListener("pointerup", event => {
-      if (state.startY === null) return;
-      const delta = event.clientY - state.startY; state.startY = null;
-      if (Math.abs(delta) < 26) return;
+      if (!state.startPoint) return;
+      const delta = event.clientX - state.startPoint.x;
+      const verticalDelta = event.clientY - state.startPoint.y;
+      state.startPoint = null;
+      if (Math.abs(delta) < 26 || Math.abs(delta) < Math.abs(verticalDelta)) return;
       const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (delta < 0 ? 1 : -1)));
       if (next !== state.index) { state.index = next; state.render(); setStateValue("index", next); }
     });
-    root.addEventListener("pointercancel", () => { state.startY = null; });
+    root.addEventListener("pointercancel", () => { state.startPoint = null; });
     root.addEventListener("contextmenu", event => event.preventDefault());
     root.addEventListener("selectstart", event => event.preventDefault());
     root.addEventListener("wheel", event => {
-      if (Math.abs(event.deltaY) < 12) return;
-      const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (event.deltaY > 0 ? 1 : -1)));
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      if (Math.abs(delta) < 12) return;
+      const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (delta > 0 ? 1 : -1)));
       if (next !== state.index) { event.preventDefault(); state.index = next; state.render(); setStateValue("index", next); }
     }, { passive: false });
   }
@@ -150,14 +156,14 @@ export default function(component) {
   state.cards = items.map(createCard);
   state.cards.forEach(card => ui.appendChild(card));
   const gesture = document.createElement("div"); gesture.className = "gesture";
-  gesture.append(text("span", "", "ปัดขึ้น–ลงเพื่อดูหุ้น"));
+  gesture.append(text("span", "", "ปัดซ้าย–ขวาเพื่อดูหุ้น"));
   const dots = document.createElement("div"); dots.className = "dots";
   items.forEach((_, i) => { const dot = document.createElement("span"); dot.className = `dot ${i === state.index ? "active" : ""}`; dots.appendChild(dot); });
   gesture.appendChild(dots); ui.appendChild(gesture);
   state.render = () => {
     state.cards.forEach((card, i) => {
       const offset = i - state.index;
-      card.style.transform = `translateY(${offset * 424}px) scale(${offset === 0 ? 1 : .94}) rotate(${offset * -1.5}deg)`;
+      card.style.transform = `translateX(${offset * 108}%) scale(${offset === 0 ? 1 : .94}) rotate(${offset * 1.5}deg)`;
       card.style.opacity = Math.abs(offset) > 1 ? "0" : (offset === 0 ? "1" : ".35");
       card.style.pointerEvents = offset === 0 ? "auto" : "none";
     });
