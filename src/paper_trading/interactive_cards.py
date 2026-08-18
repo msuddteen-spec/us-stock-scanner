@@ -415,8 +415,7 @@ export default function(component) {
           event.stopPropagation();
           state.query = "";
           if (!state.selected.includes(symbol)) toggle(symbol);
-          setOpen(true);
-          input.focus({ preventScroll: true });
+          setOpen(false);
         };
         let pointerHandled = false;
         button.onpointerdown = event => { pointerHandled = true; choose(event); };
@@ -440,8 +439,7 @@ export default function(component) {
     event.preventDefault();
     state.query = "";
     if (!state.selected.includes(custom)) toggle(custom);
-    setOpen(true);
-    input.focus();
+    setOpen(false);
   };
   root.onfocusout = event => { if (!root.contains(event.relatedTarget)) setOpen(false); };
   if (restoredFromStorage) setStateValue("symbols", state.selected);
