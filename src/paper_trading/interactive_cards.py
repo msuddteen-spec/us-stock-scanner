@@ -373,6 +373,15 @@ export default function(component) {
   const clearAll = root.querySelector(".clear-all");
   const dropdownToggle = root.querySelector(".dropdown-toggle");
   const setOpen = value => { state.open = value; select.classList.toggle("is-open", value); suggestions.classList.toggle("is-open", value); select.setAttribute("aria-expanded", String(value)); render(); };
+  if (!state.outsidePointerHandler) {
+    state.outsidePointerHandler = event => {
+      if (!state.open) return;
+      const path = event.composedPath ? event.composedPath() : [];
+      if (path.includes(root) || root.contains(event.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", state.outsidePointerHandler, true);
+  }
   const emit = () => {
     try { localStorage.setItem(dayTradeStorageKey, JSON.stringify(state.selected)); } catch (_) {}
     setStateValue("symbols", state.selected);
@@ -444,6 +453,13 @@ export default function(component) {
   root.onfocusout = event => { if (!root.contains(event.relatedTarget)) setOpen(false); };
   if (restoredFromStorage) setStateValue("symbols", state.selected);
   render();
+  return () => {
+    if (state.outsidePointerHandler) {
+      document.removeEventListener("pointerdown", state.outsidePointerHandler, true);
+      state.outsidePointerHandler = null;
+    }
+    dayTradePickerInstances.delete(root);
+  };
 }
 """
 
