@@ -192,7 +192,6 @@ _HERO_HTML = """
     <p class="hero-note">เพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำการลงทุน</p>
   </div>
   <div class="hero-actions">
-    <span class="manual-pill">กดรีเฟรชเพื่ออัปเดต</span>
     <button class="refresh-button" type="button" aria-label="รีเฟรชข้อมูลหุ้น">
       <span class="refresh-icon">↻</span> รีเฟรชหุ้น
     </button>
@@ -203,18 +202,18 @@ _HERO_HTML = """
 
 _HERO_CSS = """
 :host { display:block; width:100%; }
-.pulse-hero { position:relative; min-height:174px; overflow:hidden; isolation:isolate; border:1px solid rgba(45,212,191,.32); border-radius:28px; padding:25px; box-sizing:border-box; color:#effcff; background:linear-gradient(128deg,#071426 0%,#0e2540 54%,#0d766e 160%); box-shadow:0 20px 46px rgba(2,8,23,.34); }
+.pulse-hero { position:relative; min-height:160px; overflow:hidden; isolation:isolate; border:1px solid rgba(45,212,191,.32); border-radius:26px; padding:21px; box-sizing:border-box; color:#effcff; background:linear-gradient(128deg,#071426 0%,#0e2540 54%,#0d766e 160%); box-shadow:0 20px 46px rgba(2,8,23,.34); }
 .hero-canvas { position:absolute; inset:0; z-index:-1; width:100%; height:100%; opacity:.82; pointer-events:none; }
 .hero-copy { max-width:620px; }
 .hero-kicker { display:flex; align-items:center; gap:7px; font:800 11px/1.2 var(--st-font,Inter,sans-serif); letter-spacing:.13em; color:#a5f3fc; }
 .status-dot { width:8px; height:8px; border-radius:50%; background:#5eead4; box-shadow:0 0 15px #2dd4bf; }
-.live-pill,.manual-pill { padding:5px 8px; border:1px solid rgba(255,255,255,.17); border-radius:999px; background:rgba(255,255,255,.08); font:700 10px/1 var(--st-font,Inter,sans-serif); letter-spacing:.06em; }
-.pulse-hero h1 { margin:14px 0 7px; font:800 clamp(28px,4.6vw,42px)/1 var(--st-font,Inter,sans-serif); letter-spacing:-.055em; }
-.pulse-hero p { margin:0; font:500 14px/1.45 var(--st-font,Inter,sans-serif); color:#cfe4f3; }.hero-note { margin-top:6px!important; color:#93aec2!important; font-size:12px!important; }
-.hero-actions { position:absolute; right:23px; top:24px; display:flex; align-items:center; gap:10px; }.manual-pill { color:#cfe4f3; letter-spacing:0; }
+.live-pill { padding:5px 8px; border:1px solid rgba(255,255,255,.17); border-radius:999px; background:rgba(255,255,255,.08); font:700 10px/1 var(--st-font,Inter,sans-serif); letter-spacing:.06em; }
+.pulse-hero h1 { margin:10px 0 5px; font:800 clamp(28px,4.6vw,42px)/1 var(--st-font,Inter,sans-serif); letter-spacing:-.055em; }
+.pulse-hero p { margin:0; font:500 13px/1.4 var(--st-font,Inter,sans-serif); color:#cfe4f3; }.hero-note { margin-top:5px!important; color:#93aec2!important; font-size:11px!important; }
+.hero-actions { position:absolute; right:20px; top:20px; display:flex; align-items:center; gap:10px; }
 .refresh-button { appearance:none; border:1px solid rgba(153,246,228,.55); border-radius:999px; padding:11px 16px; cursor:pointer; color:#052e2b; background:linear-gradient(135deg,#99f6e4,#2dd4bf); box-shadow:0 9px 20px rgba(20,184,166,.28); font:800 13px/1 var(--st-font,Inter,sans-serif); transition:transform .18s ease,box-shadow .18s ease; }.refresh-button:hover { transform:translateY(-2px); box-shadow:0 13px 26px rgba(20,184,166,.38); }.refresh-button:active { transform:translateY(0) scale(.98); }.refresh-button:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 .refresh-icon { display:inline-block; margin-right:5px; font-size:18px; line-height:8px; vertical-align:-2px; }
-@media (max-width:600px) { .pulse-hero { min-height:222px; padding:21px; border-radius:23px; }.hero-actions { position:static; margin-top:18px; justify-content:space-between; }.manual-pill { font-size:10px; }.pulse-hero h1 { font-size:31px; } }
+@media (max-width:600px) { .pulse-hero { min-height:196px; padding:18px; border-radius:23px; }.hero-actions { position:static; margin-top:14px; justify-content:flex-end; }.pulse-hero h1 { font-size:29px; } }
 """
 
 
@@ -252,7 +251,7 @@ async function startHeroScene(root, state) {
     });
     const resize = () => { const w=root.clientWidth||1,h=root.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
     resize(); const observer=new ResizeObserver(resize); observer.observe(root); let frame;
-    const animate=()=>{ group.position.y=-.05+Math.sin(performance.now()/1500)*.06; line.material.opacity=.76+Math.sin(performance.now()/720)*.2; renderer.render(scene,camera); frame=requestAnimationFrame(animate); }; animate();
+    const animate=()=>{ group.position.y=-.05+Math.sin(performance.now()/650)*.06; line.material.opacity=.76+Math.sin(performance.now()/360)*.2; renderer.render(scene,camera); frame=requestAnimationFrame(animate); }; animate();
     state.cleanup=()=>{cancelAnimationFrame(frame);observer.disconnect();renderer.dispose();renderer.domElement.remove();};
   } catch (_) { /* The hero remains usable when a graphics connection is unavailable. */ }
 }
@@ -298,6 +297,6 @@ def stock_pulse_hero(*, ready: bool, key: str = "stock-pulse-hero") -> bool:
         key=key,
         on_refresh_change=lambda: None,
         width="stretch",
-        height=230,
+        height=210,
     )
     return bool(getattr(result, "refresh", False))
