@@ -291,6 +291,9 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
             try:
                 manual_scan_requested = st.session_state.pop("manual_scan_requested", False)
                 if manual_scan_requested:
+                    # Keep the daily picks dynamic: a manual refresh deliberately
+                    # bypasses the hourly cache and ranks the market again.
+                    load_daily_recommendations.clear()
                     with st.spinner("กำลังสแกน Top 7..."):
                         refresh_realtime(record_signal=True)
                     st.success("สแกน Top 7 สำเร็จ — ไม่มีการส่งคำสั่ง")
@@ -317,7 +320,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                 _render_recommendation_cards(st, recommendations, company_names, "top")
             elif active_view == "หุ้นน่าซื้อ":
                 st.subheader(f"หุ้นน่าซื้อประจำวัน — {thai_today()}")
-                st.caption("สแกนหุ้นสหรัฐทั้งหมดที่ Alpaca รองรับ → คัดสภาพคล่องสูง → วิเคราะห์ 50 ตัว → แนะนำ 5 ตัว • อัปเดตทุก 1 ชั่วโมง")
+                st.caption("สแกนหุ้นสหรัฐทั้งหมดที่ Alpaca รองรับ → คัดสภาพคล่องสูง → วิเคราะห์ 50 ตัว → แนะนำ 5 ตัว • อัปเดตทุก 1 ชั่วโมง หรือกดรีเฟรชเพื่อคัดใหม่ทันที")
                 try:
                     daily_recommendations = load_daily_recommendations(tuple(company_names), settings)
                     if daily_recommendations:
