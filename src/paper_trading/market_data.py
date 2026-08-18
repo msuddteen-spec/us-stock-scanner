@@ -60,13 +60,15 @@ class AlpacaMarketDataAdapter:
         self._snapshot_request = StockSnapshotRequest
         requested_timeframe = timeframe or settings.timeframe
         self._requested_timeframe = requested_timeframe
-        self._intraday = requested_timeframe in {"1Min", "5Min", "1Hour", "4Hour"}
+        self._intraday = requested_timeframe in {"1Min", "5Min", "1Hour", "4Hour", "8Hour"}
         if requested_timeframe == "1Min":
             self._timeframe = TimeFrame.Minute
         elif requested_timeframe == "5Min":
             self._timeframe = TimeFrame(5, TimeFrameUnit.Minute)
         elif requested_timeframe == "1Hour":
             self._timeframe = TimeFrame.Hour
+        elif requested_timeframe == "8Hour":
+            self._timeframe = TimeFrame(8, TimeFrameUnit.Hour)
         elif requested_timeframe == "4Hour":
             self._timeframe = TimeFrame(4, TimeFrameUnit.Hour)
         elif requested_timeframe == "1Day":
@@ -91,6 +93,9 @@ class AlpacaMarketDataAdapter:
         if self._requested_timeframe == "1Hour":
             # US regular hours produce about 6–7 one-hour bars per session.
             lookback_window_days = max(60, (limit * 5 + 6) // 7)
+        elif self._requested_timeframe == "8Hour":
+            # Keep a broad swing window for the small number of 8-hour bars.
+            lookback_window_days = max(90, limit * 2)
         elif self._requested_timeframe == "4Hour":
             # US regular hours produce roughly two 4-hour bars per session.
             # Keep enough calendar history for the 60-bar support/resistance window.

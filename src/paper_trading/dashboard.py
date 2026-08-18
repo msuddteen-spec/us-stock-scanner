@@ -12,6 +12,9 @@ from .config import Settings
 
 DEFAULT_TOP_SYMBOLS = ("AAPL", "MSFT", "NVDA", "AMZN", "META", "GOOGL", "TSLA")
 WATCHLIST_OPTIONS = ("AMD", "PLTR", "AVGO", "NFLX", "COST", "JPM", "COIN", "TSM")
+WATCHLIST_TIMEFRAME_OPTIONS = (("1 วัน", "1Day"), ("8 ชั่วโมง", "8Hour"), ("4 ชั่วโมง", "4Hour"), ("1 ชั่วโมง", "1Hour"), ("5 นาที", "5Min"))
+WATCHLIST_TIMEFRAME_LABELS = tuple(label for label, _ in WATCHLIST_TIMEFRAME_OPTIONS)
+WATCHLIST_TIMEFRAME_CODES = dict(WATCHLIST_TIMEFRAME_OPTIONS)
 THAI_MONTHS = (
     "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
@@ -225,13 +228,13 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         return _rank_recommendations(engine.scan_many_realtime(liquid_symbols))[:5]
 
     @st.cache_data(max_entries=1, show_spinner=False)
-    def load_hourly_watchlist_recommendations(symbols: tuple[str, ...], _settings) -> list[dict]:
-        """Evaluate the watchlist with support/resistance from one-hour bars."""
+    def load_watchlist_recommendations(symbols: tuple[str, ...], timeframe: str, _settings) -> list[dict]:
+        """Evaluate the watchlist with support/resistance from the selected bars."""
         from .broker import AlpacaPaperBroker
         from .market_data import AlpacaMarketDataAdapter
         from .paper_engine import PaperTradingEngine
 
-        market_data = AlpacaMarketDataAdapter(_settings, timeframe="1Hour")
+        market_data = AlpacaMarketDataAdapter(_settings, timeframe=timeframe)
         engine = PaperTradingEngine(_settings, market_data, AlpacaPaperBroker(_settings), logger)
         return _rank_recommendations(engine.scan_many_realtime(symbols), limit=None)
 
@@ -275,13 +278,18 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                 failures.append(f"{candidate}: {exc}")
         top_results = [item for item in results if item["symbol"] in scan_symbols]
         watch_results = []
+        watchlist_timeframe = WATCHLIST_TIMEFRAME_CODES.get(
+            st.session_state.get("watchlist_timeframe_selector", "1 ชั่วโมง"),
+            "1Hour",
+        )
         if watchlist:
             try:
-                watch_results = load_hourly_watchlist_recommendations(watchlist, settings)
+                watch_results = load_watchlist_recommendations(watchlist, watchlist_timeframe, settings)
             except Exception as exc:
                 failures.append(f"watchlist: {exc}")
         st.session_state["top_recommendations"] = _rank_recommendations(top_results)
         st.session_state["watch_recommendations"] = watch_results
+        st.session_state["watch_recommendations_timeframe"] = watchlist_timeframe
         st.session_state["scan_failures"] = failures
 
     if (scan_clicked or scan_from_main) and settings and scan_symbols:
@@ -296,7 +304,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     # Keep the daily picks dynamic: a manual refresh deliberately
                     # bypasses the hourly cache and ranks the market again.
                     load_daily_recommendations.clear()
-                    load_hourly_watchlist_recommendations.clear()
+                    load_watchlist_recommendations.clear()
                     with st.spinner("กำลังสแกน Top 7..."):
                         refresh_realtime(record_signal=True)
                     st.success("สแกน Top 7 สำเร็จ — ไม่มีการส่งคำสั่ง")
@@ -366,6 +374,20 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     _render_recommendation_cards(st, watch_recommendations, company_names, "watch-hourly")
                 else:
                     st.info("ยังไม่มีข้อมูลของหุ้นที่เล็งไว้ กดสแกนเพื่ออัปเดต")
+                st.caption("ช่วงเวลาแนวรับ–แนวต้าน")
+                selected_timeframe_label = st.segmented_control(
+                    "เลือกช่วงเวลา",
+                    options=WATCHLIST_TIMEFRAME_LABELS,
+                    default="1 ชั่วโมง",
+                    selection_mode="single",
+                    required=True,
+                    label_visibility="collapsed",
+                    width="stretch",
+                    key="watchlist_timeframe_selector",
+                )
+                loaded_timeframe = st.session_state.get("watch_recommendations_timeframe", "1Hour")
+                if WATCHLIST_TIMEFRAME_CODES.get(selected_timeframe_label) != loaded_timeframe:
+                    st.caption("เลือกช่วงเวลาแล้ว — กดรีเฟรชหุ้นเพื่อคำนวณแนวรับ–แนวต้านใหม่")
             failures = st.session_state.get("scan_failures", [])
             if failures:
                 st.warning("บาง symbol สแกนไม่สำเร็จ: " + "; ".join(failures))
