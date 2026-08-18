@@ -232,6 +232,10 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
       }
       .st-key-mobile_stock_view [role="radio"][aria-checked="true"] *,
       .st-key-watchlist_timeframe_selector [role="radio"][aria-checked="true"] * { color: #073b3b !important; }
+      html.app-theme-light .st-key-mobile_stock_view [role="radio"] *,
+      html.app-theme-light .st-key-watchlist_timeframe_selector [role="radio"] * { color: #ffffff !important; }
+      html.app-theme-light .st-key-mobile_stock_view [role="radio"][aria-checked="true"] *,
+      html.app-theme-light .st-key-watchlist_timeframe_selector [role="radio"][aria-checked="true"] * { color: #073b3b !important; }
       .st-key-save_main_watchlist button {
         color: #17324d !important; background: #e7f1f6 !important; border: 1px solid #8eafc2 !important;
         box-shadow: none !important;
