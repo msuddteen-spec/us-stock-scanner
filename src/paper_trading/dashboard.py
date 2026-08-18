@@ -215,6 +215,17 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         engine = PaperTradingEngine(_settings, market_data, AlpacaPaperBroker(_settings), logger)
         return _rank_recommendations(engine.scan_many_realtime(liquid_symbols))[:5]
 
+    @st.cache_data(ttl="1m", max_entries=1, show_spinner=False)
+    def load_day_trade_recommendations(symbols: tuple[str, ...], _settings) -> list[dict]:
+        """Evaluate the seven core stocks on recent 5-minute bars."""
+        from .broker import AlpacaPaperBroker
+        from .market_data import AlpacaMarketDataAdapter
+        from .paper_engine import PaperTradingEngine
+
+        market_data = AlpacaMarketDataAdapter(_settings, timeframe="5Min")
+        engine = PaperTradingEngine(_settings, market_data, AlpacaPaperBroker(_settings), logger)
+        return _rank_recommendations(engine.scan_many_realtime(symbols))
+
     company_names: dict[str, str] = {}
     if settings:
         try:
@@ -271,6 +282,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     # Keep the daily picks dynamic: a manual refresh deliberately
                     # bypasses the hourly cache and ranks the market again.
                     load_daily_recommendations.clear()
+                    load_day_trade_recommendations.clear()
                     with st.spinner("กำลังสแกน Top 7..."):
                         refresh_realtime(record_signal=True)
                     st.success("สแกน Top 7 สำเร็จ — ไม่มีการส่งคำสั่ง")
@@ -283,7 +295,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         if recommendations:
             active_view = st.segmented_control(
                 "เลือกหมวดหุ้น",
-                options=("หุ้นนางฟ้า", "หุ้นน่าซื้อ", "หุ้นที่เล็งไว้"),
+                options=("หุ้นนางฟ้า", "หุ้นน่าซื้อ", "Day Trade", "หุ้นที่เล็งไว้"),
                 default="หุ้นนางฟ้า",
                 selection_mode="single",
                 required=True,
@@ -306,6 +318,17 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                         st.info("ยังไม่พบหุ้นที่มีข้อมูลเพียงพอสำหรับการจัดอันดับ")
                 except Exception as exc:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
+            elif active_view == "Day Trade":
+                st.subheader("Day Trade — แนวรับ แนวต้าน")
+                st.caption("วิเคราะห์แท่งราคา 5 นาทีของหุ้น 7 นางฟ้า • รีเฟรชได้ทุก 1 นาที • Paper Trading เท่านั้น")
+                try:
+                    day_trade_recommendations = load_day_trade_recommendations(DEFAULT_TOP_SYMBOLS, settings)
+                    if day_trade_recommendations:
+                        _render_recommendation_cards(st, day_trade_recommendations, company_names, "day-trade")
+                    else:
+                        st.info("ยังไม่มีข้อมูลแท่งราคา 5 นาทีเพียงพอสำหรับ Day Trade")
+                except Exception as exc:
+                    st.warning(f"โหลดข้อมูล Day Trade ไม่สำเร็จ: {exc}")
             else:
                 st.subheader("หุ้นที่เล็งไว้")
                 watchlist_options = tuple(sorted(dict.fromkeys(

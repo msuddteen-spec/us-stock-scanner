@@ -45,20 +45,29 @@ class CsvMarketDataAdapter:
 class AlpacaMarketDataAdapter:
     """Alpaca historical stock data adapter; credentials are never used for live orders."""
 
-    def __init__(self, settings):
+    def __init__(self, settings, *, timeframe: str | None = None):
         settings.validate_alpaca_credentials()
         try:
             from alpaca.data.enums import DataFeed
             from alpaca.data.historical import StockHistoricalDataClient
             from alpaca.data.requests import StockBarsRequest, StockLatestTradeRequest, StockSnapshotRequest
-            from alpaca.data.timeframe import TimeFrame
+            from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
         except ImportError as exc:
             raise RuntimeError("Install the optional Alpaca dependency with: pip install -e '.[alpaca]'") from exc
         self._client = StockHistoricalDataClient(settings.alpaca_api_key, settings.alpaca_secret_key)
         self._request_type = StockBarsRequest
         self._latest_trade_request = StockLatestTradeRequest
         self._snapshot_request = StockSnapshotRequest
-        self._timeframe = TimeFrame.Day if settings.timeframe == "1Day" else TimeFrame.Hour
+        requested_timeframe = timeframe or settings.timeframe
+        self._intraday = requested_timeframe in {"1Min", "5Min"}
+        if requested_timeframe == "1Min":
+            self._timeframe = TimeFrame.Minute
+        elif requested_timeframe == "5Min":
+            self._timeframe = TimeFrame(5, TimeFrameUnit.Minute)
+        elif requested_timeframe == "1Day":
+            self._timeframe = TimeFrame.Day
+        else:
+            self._timeframe = TimeFrame.Hour
         self._feed = DataFeed.IEX if settings.alpaca_data_feed == "iex" else DataFeed.SIP
 
     def get_bars(self, symbol: str, *, limit: int = 120) -> list[Bar]:
@@ -72,7 +81,10 @@ class AlpacaMarketDataAdapter:
         # requested limit to Alpaca: that API returns the *first* bars in the
         # range, which would make support/resistance stale. We take the latest
         # bars after sorting instead.
-        start = end - timedelta(days=max(365, limit * 3))
+        # Intraday mode only needs recent sessions; requesting a year of minute
+        # bars would be slow and can exceed the provider's response limits.
+        lookback_window_days = max(14, (limit * 5 + 77) // 78) if self._intraday else max(365, limit * 3)
+        start = end - timedelta(days=lookback_window_days)
         requested = tuple(dict.fromkeys(symbol.upper() for symbol in symbols))
         result: dict[str, list[Bar]] = {symbol: [] for symbol in requested}
         for batch in _chunks(requested, batch_size):
