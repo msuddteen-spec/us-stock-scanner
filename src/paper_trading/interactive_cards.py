@@ -404,12 +404,22 @@ export default function(component) {
     input.value = state.query;
     input.placeholder = state.selected.length ? "" : "พิมพ์ค้นหา ticker หรือชื่อบริษัท";
     clearAll.style.display = state.selected.length ? "block" : "none";
-    const query = state.query.toLowerCase().trim();
-    const matches = options.filter(item => {
-      const symbol = String(item.symbol || "").toLowerCase();
-      const name = String(item.name || "").toLowerCase();
-      return !query || symbol.includes(query) || name.includes(query);
-    }).slice(0, 12);
+    const query = state.query.trim().toLowerCase();
+    const matches = options.map(item => {
+      const symbol = String(item.symbol || "").trim().toLowerCase();
+      const name = String(item.name || "").trim().toLowerCase();
+      let rank = 99;
+      if (!query) rank = 0;
+      else if (symbol === query) rank = 0;
+      else if (symbol.startsWith(query)) rank = 1;
+      else if (name.startsWith(query)) rank = 2;
+      else if (symbol.includes(query)) rank = 3;
+      else if (name.includes(query)) rank = 4;
+      return { item, symbol, rank };
+    }).filter(entry => entry.rank < 99)
+      .sort((left, right) => left.rank - right.rank || left.symbol.localeCompare(right.symbol))
+      .map(entry => entry.item)
+      .slice(0, 12);
     suggestions.replaceChildren();
     if (!matches.length) {
       const empty = document.createElement("div"); empty.className = "picker-empty"; empty.textContent = "ไม่พบหุ้นที่ค้นหา"; suggestions.appendChild(empty);
