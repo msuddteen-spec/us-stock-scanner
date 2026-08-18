@@ -187,6 +187,18 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
       .st-key-watchlist_timeframe_selector button[aria-pressed="true"] { color: #073b3b !important; }
       .st-key-mobile_stock_view button[aria-pressed="true"] *,
       .st-key-watchlist_timeframe_selector button[aria-pressed="true"] * { color: #073b3b !important; }
+      .st-key-mobile_stock_view [role="radio"],
+      .st-key-watchlist_timeframe_selector [role="radio"] {
+        color: #ffffff !important; background: #10233f !important; border-color: #6f8da5 !important;
+      }
+      .st-key-mobile_stock_view [role="radio"] *,
+      .st-key-watchlist_timeframe_selector [role="radio"] * { color: #ffffff !important; }
+      .st-key-mobile_stock_view [role="radio"][aria-checked="true"],
+      .st-key-watchlist_timeframe_selector [role="radio"][aria-checked="true"] {
+        color: #073b3b !important; background: #b9f3e9 !important; border-color: #14b8a6 !important;
+      }
+      .st-key-mobile_stock_view [role="radio"][aria-checked="true"] *,
+      .st-key-watchlist_timeframe_selector [role="radio"][aria-checked="true"] * { color: #073b3b !important; }
       .st-key-save_main_watchlist button {
         color: #17324d !important; background: #e7f1f6 !important; border: 1px solid #8eafc2 !important;
         box-shadow: none !important;
