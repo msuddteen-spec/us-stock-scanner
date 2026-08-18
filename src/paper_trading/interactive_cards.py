@@ -19,13 +19,16 @@ _CSS = """
 .deck-root {
   position: relative; height: 540px; overflow: hidden; border-radius: 28px;
   background: linear-gradient(145deg, #0b1428 0%, #14213d 56%, #0e7490 150%);
-  touch-action: pan-y; user-select: none; isolation: isolate;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; isolation: isolate;
   box-shadow: 0 20px 55px rgba(15, 23, 42, .23);
 }
 .three-canvas { position:absolute; inset:0; width:100%; height:100%; opacity:.82; pointer-events:none; }
 .deck-ui { position:absolute; inset:0; z-index:1; padding:20px; color:#f8fafc; }
 .deck-label { font: 700 11px/1.2 var(--st-font, Inter, sans-serif); letter-spacing:.12em; color:#93c5fd; }
 .deck-count { float:right; font: 600 12px/1.2 var(--st-font, Inter, sans-serif); color:#cbd5e1; letter-spacing:0; }
+.stock-card, .stock-card * {
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+}
 .stock-card {
   position:absolute; left:20px; right:20px; top:62px; height:398px; box-sizing:border-box;
   padding:22px; border-radius:24px; background:rgba(255,255,255,.96); color:#14213d;
@@ -115,14 +118,22 @@ export default function(component) {
   if (!state) {
     state = { root, index: 0, cards: [], startY: null, destroyed: false, cleanupThree: null };
     deckInstances.set(root, state); startThreeBackground(root, state);
-    root.addEventListener("pointerdown", event => { state.startY = event.clientY; root.setPointerCapture?.(event.pointerId); });
+    root.addEventListener("pointerdown", event => {
+      event.preventDefault(); state.startY = event.clientY; root.setPointerCapture?.(event.pointerId);
+    }, { passive: false });
+    root.addEventListener("pointermove", event => {
+      if (state.startY !== null) event.preventDefault();
+    }, { passive: false });
     root.addEventListener("pointerup", event => {
       if (state.startY === null) return;
       const delta = event.clientY - state.startY; state.startY = null;
-      if (Math.abs(delta) < 45) return;
+      if (Math.abs(delta) < 26) return;
       const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (delta < 0 ? 1 : -1)));
       if (next !== state.index) { state.index = next; state.render(); setStateValue("index", next); }
     });
+    root.addEventListener("pointercancel", () => { state.startY = null; });
+    root.addEventListener("contextmenu", event => event.preventDefault());
+    root.addEventListener("selectstart", event => event.preventDefault());
     root.addEventListener("wheel", event => {
       if (Math.abs(event.deltaY) < 12) return;
       const next = Math.max(0, Math.min(state.cards.length - 1, state.index + (event.deltaY > 0 ? 1 : -1)));
