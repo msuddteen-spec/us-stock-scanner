@@ -275,6 +275,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         st.session_state["manual_scan_requested"] = True
 
     def render_realtime_panel():
+        manual_scan_requested = False
         if settings and scan_symbols:
             try:
                 manual_scan_requested = st.session_state.pop("manual_scan_requested", False)
@@ -283,6 +284,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     # bypasses the hourly cache and ranks the market again.
                     load_daily_recommendations.clear()
                     load_day_trade_recommendations.clear()
+                    st.session_state["day_trade_refresh_requested"] = True
                     with st.spinner("กำลังสแกน Top 7..."):
                         refresh_realtime(record_signal=True)
                     st.success("สแกน Top 7 สำเร็จ — ไม่มีการส่งคำสั่ง")
@@ -320,15 +322,40 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
             elif active_view == "Day Trade":
                 st.subheader("Day Trade — แนวรับ แนวต้าน")
-                st.caption("วิเคราะห์แท่งราคา 5 นาทีของหุ้น 7 นางฟ้า • กดรีเฟรชเพื่ออัปเดต • Paper Trading เท่านั้น")
-                try:
-                    day_trade_recommendations = load_day_trade_recommendations(DEFAULT_TOP_SYMBOLS, settings)
+                st.caption("เลือกหุ้นเองจากรายการ Alpaca • บันทึกไว้ในเครื่องนี้ • วิเคราะห์แท่งราคา 5 นาที • Paper Trading เท่านั้น")
+                from .interactive_cards import day_trade_picker
+                day_trade_options = tuple(sorted(dict.fromkeys(
+                    (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *watchlist)
+                )))
+                selected_day_trade = day_trade_picker(
+                    [{"symbol": symbol, "name": _company_name(symbol, company_names)} for symbol in day_trade_options],
+                    ("WDC",),
+                    key="day-trade-local-picker",
+                )
+                refresh_day_trade = st.session_state.pop("day_trade_refresh_requested", False)
+                saved_day_trade_symbols = tuple(st.session_state.get("day_trade_scan_symbols", ()))
+                if not selected_day_trade:
+                    st.info("เลือกหุ้นอย่างน้อย 1 ตัว แล้วกดรีเฟรชหุ้นเพื่อดูแนวรับ–แนวต้าน")
+                elif refresh_day_trade:
+                    try:
+                        with st.spinner("กำลังวิเคราะห์ Day Trade..."):
+                            day_trade_recommendations = load_day_trade_recommendations(selected_day_trade, settings)
+                        st.session_state["day_trade_recommendations"] = day_trade_recommendations
+                        st.session_state["day_trade_scan_symbols"] = selected_day_trade
+                        if day_trade_recommendations:
+                            _render_recommendation_cards(st, day_trade_recommendations, company_names, "day-trade")
+                        else:
+                            st.info("ยังไม่มีข้อมูลแท่งราคา 5 นาทีเพียงพอสำหรับหุ้นที่เลือก")
+                    except Exception as exc:
+                        st.warning(f"โหลดข้อมูล Day Trade ไม่สำเร็จ: {exc}")
+                elif saved_day_trade_symbols == selected_day_trade:
+                    day_trade_recommendations = st.session_state.get("day_trade_recommendations", [])
                     if day_trade_recommendations:
                         _render_recommendation_cards(st, day_trade_recommendations, company_names, "day-trade")
                     else:
-                        st.info("ยังไม่มีข้อมูลแท่งราคา 5 นาทีเพียงพอสำหรับ Day Trade")
-                except Exception as exc:
-                    st.warning(f"โหลดข้อมูล Day Trade ไม่สำเร็จ: {exc}")
+                        st.info("กดรีเฟรชหุ้นเพื่อดูแนวรับ–แนวต้านของหุ้นที่เลือก")
+                else:
+                    st.info("บันทึกหุ้นในเครื่องแล้ว — กดรีเฟรชหุ้นเพื่อโหลดแนวรับ–แนวต้าน")
             else:
                 st.subheader("หุ้นที่เล็งไว้")
                 watchlist_options = tuple(sorted(dict.fromkeys(

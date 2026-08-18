@@ -276,6 +276,132 @@ _STOCK_PULSE_HERO = st.components.v2.component(
 )
 
 
+_DAY_TRADE_PICKER_HTML = """
+<section class="day-trade-picker" aria-label="เลือกหุ้น Day Trade">
+  <div class="picker-title">เลือกหุ้น Day Trade</div>
+  <div class="picker-subtitle">รายการนี้บันทึกอัตโนมัติไว้ในเครื่องนี้</div>
+  <div class="selected-symbols"></div>
+  <input class="picker-search" type="search" autocomplete="off" placeholder="พิมพ์ค้นหา ticker หรือชื่อบริษัท" aria-label="ค้นหาหุ้น Day Trade">
+  <div class="picker-suggestions"></div>
+</section>
+"""
+
+
+_DAY_TRADE_PICKER_CSS = """
+:host { display:block; width:100%; }
+.day-trade-picker { padding:16px; border:1px solid var(--st-border-color,#d8e2ec); border-radius:18px; background:var(--st-secondary-background-color,#f1f5f9); color:var(--st-text-color,#122033); font-family:var(--st-font,Inter,sans-serif); }
+.picker-title { font-weight:800; font-size:15px; }.picker-subtitle { margin-top:4px; color:var(--st-secondary-text-color,#64748b); font-size:12px; }
+.selected-symbols { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 10px; min-height:24px; }
+.selected-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 9px; border-radius:999px; color:#0f3d3a; background:#ccfbf1; font-size:12px; font-weight:800; }.selected-chip button { border:0; padding:0; cursor:pointer; color:#0f766e; background:transparent; font-size:15px; line-height:1; }
+.picker-search { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--st-border-color,#cbd5e1); border-radius:12px; outline:none; color:var(--st-text-color,#122033); background:var(--st-background-color,#fff); font:500 13px var(--st-font,Inter,sans-serif); }.picker-search:focus { border-color:var(--st-primary-color,#0f766e); box-shadow:0 0 0 3px rgba(20,184,166,.14); }
+.picker-suggestions { display:grid; gap:5px; margin-top:8px; max-height:132px; overflow:auto; }.suggestion { display:flex; justify-content:space-between; gap:8px; width:100%; padding:9px 10px; border:1px solid transparent; border-radius:10px; cursor:pointer; text-align:left; color:var(--st-text-color,#122033); background:var(--st-background-color,#fff); font:600 12px var(--st-font,Inter,sans-serif); }.suggestion:hover { border-color:var(--st-primary-color,#0f766e); }.suggestion small { color:var(--st-secondary-text-color,#64748b); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.picker-empty { padding:9px 10px; color:var(--st-secondary-text-color,#64748b); font-size:12px; }
+"""
+
+
+_DAY_TRADE_PICKER_JS = """
+const dayTradePickerInstances = new WeakMap();
+const dayTradeStorageKey = "us-stock-scanner:day-trade-symbols";
+
+function normaliseSymbols(values) {
+  return [...new Set((values || []).map(value => String(value).trim().toUpperCase()).filter(Boolean))];
+}
+
+export default function(component) {
+  const { data, parentElement, setStateValue } = component;
+  const root = parentElement.querySelector(".day-trade-picker");
+  if (!root) return;
+  let state = dayTradePickerInstances.get(root);
+  const options = data?.options || [];
+  const optionMap = new Map(options.map(item => [String(item.symbol).toUpperCase(), item]));
+  if (!state) {
+    state = { selected: normaliseSymbols(data?.selected), query: "" };
+    try {
+      const saved = JSON.parse(localStorage.getItem(dayTradeStorageKey) || "null");
+      if (Array.isArray(saved)) state.selected = normaliseSymbols(saved);
+    } catch (_) { /* Use the server-provided default when storage is unavailable. */ }
+    state.selected = normaliseSymbols(state.selected);
+    dayTradePickerInstances.set(root, state);
+  }
+  const chips = root.querySelector(".selected-symbols");
+  const input = root.querySelector(".picker-search");
+  const suggestions = root.querySelector(".picker-suggestions");
+  const emit = () => {
+    try { localStorage.setItem(dayTradeStorageKey, JSON.stringify(state.selected)); } catch (_) {}
+    setStateValue("symbols", state.selected);
+    render();
+  };
+  const toggle = symbol => {
+    state.selected = state.selected.includes(symbol)
+      ? state.selected.filter(item => item !== symbol)
+      : [...state.selected, symbol];
+    emit();
+  };
+  const render = () => {
+    chips.replaceChildren();
+    state.selected.forEach(symbol => {
+      const chip = document.createElement("span"); chip.className = "selected-chip";
+      const label = document.createElement("span"); label.textContent = symbol;
+      const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "×"; remove.setAttribute("aria-label", `ลบ ${symbol}`); remove.onclick = () => toggle(symbol);
+      chip.append(label, remove); chips.appendChild(chip);
+    });
+    input.value = state.query;
+    const query = state.query.toLowerCase().trim();
+    const matches = options.filter(item => {
+      const symbol = String(item.symbol || "").toLowerCase();
+      const name = String(item.name || "").toLowerCase();
+      return !query || symbol.includes(query) || name.includes(query);
+    }).slice(0, 12);
+    suggestions.replaceChildren();
+    if (!matches.length) {
+      const empty = document.createElement("div"); empty.className = "picker-empty"; empty.textContent = "ไม่พบหุ้นที่ค้นหา"; suggestions.appendChild(empty);
+    } else {
+      matches.forEach(item => {
+        const symbol = String(item.symbol).toUpperCase();
+        const button = document.createElement("button"); button.type = "button"; button.className = "suggestion";
+        const ticker = document.createElement("strong"); ticker.textContent = state.selected.includes(symbol) ? `✓ ${symbol}` : symbol;
+        const company = document.createElement("small"); company.textContent = item.name || "";
+        button.append(ticker, company); button.onclick = () => toggle(symbol); suggestions.appendChild(button);
+      });
+    }
+  };
+  input.oninput = event => { state.query = event.target.value; render(); };
+  input.onkeydown = event => {
+    if (event.key !== "Enter") return;
+    const custom = state.query.trim().toUpperCase();
+    if (/^[A-Z0-9.]{1,10}$/.test(custom) && !optionMap.has(custom)) { state.query = ""; toggle(custom); }
+  };
+  render();
+}
+"""
+
+
+_DAY_TRADE_PICKER = st.components.v2.component(
+    "day_trade_local_picker_v1",
+    html=_DAY_TRADE_PICKER_HTML,
+    css=_DAY_TRADE_PICKER_CSS,
+    js=_DAY_TRADE_PICKER_JS,
+)
+
+
+def day_trade_picker(options: list[dict[str, str]], default: tuple[str, ...], *, key: str) -> tuple[str, ...]:
+    """Render a browser-local Day Trade picker and return its selected symbols."""
+    component_state = st.session_state.get(key, {})
+    current = component_state.get("symbols", default) if isinstance(component_state, dict) else default
+    result = _DAY_TRADE_PICKER(
+        data={"options": options, "selected": list(current)},
+        key=key,
+        default={"symbols": list(current)},
+        on_symbols_change=lambda: None,
+        width="stretch",
+        height=190,
+    )
+    selected = getattr(result, "symbols", None)
+    if not isinstance(selected, (list, tuple)):
+        selected = current
+    return tuple(dict.fromkeys(str(symbol).strip().upper() for symbol in selected if str(symbol).strip()))
+
+
 def stock_card_deck(items: list[dict[str, Any]], *, key: str) -> Any:
     """Render an accessible swipe deck; the selected card index persists per session."""
     component_state = st.session_state.get(key, {})
