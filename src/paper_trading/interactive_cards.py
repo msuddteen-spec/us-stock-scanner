@@ -22,10 +22,16 @@ _CSS = """
   touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; isolation: isolate;
   box-shadow: none; border: 0;
 }
+.deck-root.theme-dark {
+  background: linear-gradient(145deg, #14213d 0%, #0b1428 56%, #0e4f62 150%);
+}
 .three-canvas { position:absolute; inset:0; width:100%; height:100%; opacity:.82; pointer-events:none; }
 .deck-ui { position:absolute; inset:0; z-index:1; padding:20px; color:var(--st-text-color,#10233f); }
+.deck-root.theme-dark .deck-ui { color:#e7eef9; }
 .deck-label { font: 700 11px/1.2 var(--st-font, Inter, sans-serif); letter-spacing:.12em; color:var(--st-primary-color,#0f766e); }
+.deck-root.theme-dark .deck-label { color:#5eead4; }
 .deck-count { float:right; font: 600 12px/1.2 var(--st-font, Inter, sans-serif); color:var(--st-secondary-text-color,#64748b); letter-spacing:0; }
+.deck-root.theme-dark .deck-count, .deck-root.theme-dark .gesture { color:#a8bad0; }
 .stock-card, .stock-card * {
   user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
 }
@@ -50,6 +56,7 @@ _CSS = """
 .reason { margin-top:auto; font:500 12px/1.4 var(--st-font, Inter, sans-serif); color:#475569; }
 .gesture { position:absolute; left:20px; right:20px; bottom:19px; display:flex; align-items:center; justify-content:space-between; font:600 12px/1.2 var(--st-font, Inter, sans-serif); color:var(--st-primary-color,#0f766e); }
 .dots { display:flex; gap:5px; }.dot { width:6px; height:6px; border-radius:999px; background:color-mix(in srgb, var(--st-primary-color,#0f766e) 22%, transparent); }.dot.active { width:20px; background:var(--st-primary-color,#14b8a6); }
+.deck-root.theme-dark .dot { background:rgba(94,234,212,.3); }.deck-root.theme-dark .dot.active { background:#5eead4; }
 @media (max-width: 420px) { .deck-root { height:520px; } .stock-card { height:384px; top:59px; padding:20px; } .price { font-size:38px; } }
 """
 
@@ -116,8 +123,21 @@ export default function(component) {
   if (!root) return;
   let state = deckInstances.get(root);
   if (!state) {
-    state = { root, index: 0, cards: [], startPoint: null, destroyed: false, cleanupThree: null };
+    state = { root, index: 0, cards: [], startPoint: null, destroyed: false, cleanupThree: null, themeObserver: null };
     deckInstances.set(root, state); startThreeBackground(root, state);
+    const syncTheme = () => {
+      const html = document.documentElement;
+      if (html.classList.contains("app-theme-dark")) { root.classList.add("theme-dark"); return; }
+      if (html.classList.contains("app-theme-light")) { root.classList.remove("theme-dark"); return; }
+      const app = document.querySelector(".stApp");
+      const background = app ? getComputedStyle(app).backgroundColor : "";
+      const values = background.match(/\\d+(?:\\.\\d+)?/g)?.map(Number) || [];
+      const luminance = values.length >= 3 ? (values[0] * 299 + values[1] * 587 + values[2] * 114) / 1000 : 255;
+      root.classList.toggle("theme-dark", luminance < 150);
+    };
+    syncTheme();
+    state.themeObserver = new MutationObserver(syncTheme);
+    state.themeObserver.observe(document.documentElement, { attributes:true, attributeFilter:["class"] });
     root.addEventListener("pointerdown", event => {
       state.startPoint = { x: event.clientX, y: event.clientY }; root.setPointerCapture?.(event.pointerId);
     }, { passive: false });
@@ -170,7 +190,7 @@ export default function(component) {
     dots.querySelectorAll(".dot").forEach((dot, i) => dot.classList.toggle("active", i === state.index));
   };
   state.render();
-  return () => { state.destroyed = true; state.cleanupThree?.(); deckInstances.delete(root); };
+  return () => { state.destroyed = true; state.cleanupThree?.(); state.themeObserver?.disconnect(); deckInstances.delete(root); };
 }
 """
 

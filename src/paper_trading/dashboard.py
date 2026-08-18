@@ -164,6 +164,39 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
       [data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3,
       [data-testid="stMain"] h4, [data-testid="stMain"] p, [data-testid="stMain"] label { color: var(--st-text-color, #10233f) !important; }
       [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: var(--st-secondary-text-color, #5d7188) !important; }
+      html.app-theme-light, html.app-theme-light body,
+      html.app-theme-light [data-testid="stAppViewContainer"] { background: #f7fbff !important; }
+      html.app-theme-light [data-testid="stAppViewContainer"] {
+        background:
+          radial-gradient(circle at 8% 0%, rgba(20,184,166,.16), transparent 34%),
+          radial-gradient(circle at 96% 18%, rgba(96,165,250,.12), transparent 30%),
+          linear-gradient(180deg, #fbfeff 0%, #eaf5f8 100%) !important;
+      }
+      html.app-theme-light [data-testid="stMain"] { color: #10233f !important; }
+      html.app-theme-light [data-testid="stMain"] h1, html.app-theme-light [data-testid="stMain"] h2,
+      html.app-theme-light [data-testid="stMain"] h3, html.app-theme-light [data-testid="stMain"] h4,
+      html.app-theme-light [data-testid="stMain"] p, html.app-theme-light [data-testid="stMain"] label { color: #10233f !important; }
+      html.app-theme-light [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: #5d7188 !important; }
+      html.app-theme-dark, html.app-theme-dark body,
+      html.app-theme-dark [data-testid="stAppViewContainer"] { background: #071426 !important; }
+      html.app-theme-dark [data-testid="stAppViewContainer"] {
+        background:
+          radial-gradient(circle at 8% 0%, rgba(20,184,166,.16), transparent 34%),
+          radial-gradient(circle at 96% 18%, rgba(96,165,250,.12), transparent 30%),
+          linear-gradient(180deg, #071426 0%, #0b1428 100%) !important;
+      }
+      html.app-theme-dark [data-testid="stMain"] { color: #e7eef9 !important; }
+      html.app-theme-dark [data-testid="stMain"] h1, html.app-theme-dark [data-testid="stMain"] h2,
+      html.app-theme-dark [data-testid="stMain"] h3, html.app-theme-dark [data-testid="stMain"] h4,
+      html.app-theme-dark [data-testid="stMain"] p, html.app-theme-dark [data-testid="stMain"] label { color: #e7eef9 !important; }
+      html.app-theme-dark [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: #a8bad0 !important; }
+      html.app-theme-dark .st-key-save_main_watchlist button {
+        color: #e7eef9 !important; background: #14213d !important; border-color: #40617d !important;
+      }
+      html.app-theme-dark .st-key-watchlist_ticker_search [data-baseweb="select"] {
+        color: #e7eef9 !important; background: #14213d !important; border-color: #40617d !important;
+      }
+      html.app-theme-dark .st-key-watchlist_ticker_search input { color: #e7eef9 !important; }
       [data-testid="stSegmentedControl"] button {
         color: #ffffff !important; background: #10233f !important; border-color: #6f8da5 !important;
         text-shadow: none !important;
@@ -224,6 +257,18 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
     </style>
     <script>
       (() => {
+        const syncDashboardTheme = () => {
+          const app = document.querySelector('.stApp');
+          if (!app) return;
+          const background = getComputedStyle(app).backgroundColor || '';
+          const values = background.match(/\\d+(?:\\.\\d+)?/g)?.map(Number) || [];
+          const luminance = values.length >= 3
+            ? (values[0] * 299 + values[1] * 587 + values[2] * 114) / 1000
+            : 255;
+          const dark = luminance < 150;
+          document.documentElement.classList.toggle('app-theme-dark', dark);
+          document.documentElement.classList.toggle('app-theme-light', !dark);
+        };
         const mountRefresh = () => {
           const header = document.querySelector('[data-testid="stHeader"]');
           const nativeButton = document.querySelector('.st-key-header_refresh button');
@@ -243,35 +288,15 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
           refreshButton.disabled = nativeButton.disabled;
           refreshButton.onclick = () => nativeButton.click();
         };
+        syncDashboardTheme();
         mountRefresh();
         window.clearInterval(window.stockPulseToolbarTimer);
+        window.clearInterval(window.stockPulseThemeTimer);
         window.stockPulseToolbarTimer = window.setInterval(mountRefresh, 700);
+        window.stockPulseThemeTimer = window.setInterval(syncDashboardTheme, 400);
       })();
     </script>
     """, unsafe_allow_javascript=True)
-    try:
-        active_theme = st.context.theme.type
-    except Exception:
-        active_theme = "light"
-    if active_theme == "dark":
-        st.html("""
-        <style>
-          :root, body, [data-testid="stAppViewContainer"] { background: #071426 !important; }
-          [data-testid="stAppViewContainer"] {
-            background:
-              radial-gradient(circle at 8% 0%, rgba(20,184,166,.16), transparent 34%),
-              radial-gradient(circle at 96% 18%, rgba(96,165,250,.12), transparent 30%),
-              linear-gradient(180deg, #071426 0%, #0b1428 100%) !important;
-          }
-          [data-testid="stMain"] { color: #e7eef9 !important; }
-          [data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3,
-          [data-testid="stMain"] h4, [data-testid="stMain"] p, [data-testid="stMain"] label { color: #e7eef9 !important; }
-          [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: #a8bad0 !important; }
-          .st-key-save_main_watchlist button { color: #e7eef9 !important; background: #14213d !important; border-color: #40617d !important; }
-          .st-key-watchlist_ticker_search [data-baseweb="select"] { color: #e7eef9 !important; background: #14213d !important; border-color: #40617d !important; }
-          .st-key-watchlist_ticker_search input { color: #e7eef9 !important; }
-        </style>
-        """)
     scan_from_main = scan_from_toolbar or stock_pulse_hero(ready=bool(settings))
 
     @st.cache_data(ttl="6h", max_entries=1, show_spinner=False)
