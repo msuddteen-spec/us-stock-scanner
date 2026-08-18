@@ -152,15 +152,18 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
     )
     st.html("""
     <style>
-      :root, body, [data-testid="stAppViewContainer"] { background: var(--st-background-color) !important; }
+      :root, body, [data-testid="stAppViewContainer"] { background: #f7fbff !important; }
       [data-testid="stAppViewContainer"] {
         background:
-          radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--st-primary-color) 13%, transparent), transparent 34%),
-          radial-gradient(circle at 96% 18%, color-mix(in srgb, var(--st-primary-color) 10%, transparent), transparent 30%),
-          linear-gradient(180deg, var(--st-background-color) 0%, var(--st-secondary-background-color) 100%) !important;
+          radial-gradient(circle at 8% 0%, rgba(20,184,166,.16), transparent 34%),
+          radial-gradient(circle at 96% 18%, rgba(96,165,250,.12), transparent 30%),
+          linear-gradient(180deg, #fbfeff 0%, #eaf5f8 100%) !important;
       }
       [data-testid="stHeader"] { background: transparent !important; }
-      [data-testid="stMain"] { background: transparent !important; }
+      [data-testid="stMain"] { background: transparent !important; color: #10233f !important; }
+      [data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3,
+      [data-testid="stMain"] h4, [data-testid="stMain"] p, [data-testid="stMain"] label { color: #10233f !important; }
+      [data-testid="stMain"] [data-testid="stCaptionContainer"] { color: #5d7188 !important; }
       .st-key-header_refresh { display: none !important; }
       #stock-pulse-header-refresh {
         position: absolute; top: 12px; right: 48px; z-index: 1000000; border: 1px solid rgba(153,246,228,.56);
