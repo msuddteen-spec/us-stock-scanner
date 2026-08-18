@@ -252,7 +252,11 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         if st.button("บันทึกรายการที่เล็งไว้", key="save_main_watchlist"):
             try:
                 _save_watchlist(",".join(selected_watchlist))
-                st.success("บันทึกรายการที่เล็งไว้แล้ว")
+                # The rerun below reloads the saved list. Request a scan so the
+                # watchlist panel contains fresh cards instead of an empty state.
+                st.session_state["manual_scan_requested"] = True
+                st.session_state["mobile_stock_view"] = "หุ้นที่เล็งไว้"
+                st.success("บันทึกแล้ว — กำลังสแกนหุ้นที่เล็งไว้")
                 st.rerun()
             except ValueError as exc:
                 st.error(str(exc))
