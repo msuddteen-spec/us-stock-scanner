@@ -149,6 +149,15 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
     )
     st.html("""
     <style>
+      :root, body, [data-testid="stAppViewContainer"] { background: var(--st-background-color) !important; }
+      [data-testid="stAppViewContainer"] {
+        background:
+          radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--st-primary-color) 13%, transparent), transparent 34%),
+          radial-gradient(circle at 96% 18%, color-mix(in srgb, var(--st-primary-color) 10%, transparent), transparent 30%),
+          linear-gradient(180deg, var(--st-background-color) 0%, var(--st-secondary-background-color) 100%) !important;
+      }
+      [data-testid="stHeader"] { background: transparent !important; }
+      [data-testid="stMain"] { background: transparent !important; }
       .st-key-header_refresh { display: none !important; }
       #stock-pulse-header-refresh {
         position: absolute; top: 12px; right: 48px; z-index: 1000000; border: 1px solid rgba(153,246,228,.56);
@@ -300,7 +309,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
         if recommendations:
             active_view = st.segmented_control(
                 "เลือกหมวดหุ้น",
-                options=("หุ้นนางฟ้า", "หุ้นน่าซื้อ", "Day Trade", "หุ้นที่เล็งไว้"),
+                options=("หุ้นนางฟ้า", "หุ้นน่าซื้อ", "หุ้นที่เล็งไว้"),
                 default="หุ้นนางฟ้า",
                 selection_mode="single",
                 required=True,
@@ -308,6 +317,8 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                 width="stretch",
                 key="mobile_stock_view",
             )
+            if active_view not in {"หุ้นนางฟ้า", "หุ้นน่าซื้อ", "หุ้นที่เล็งไว้"}:
+                active_view = "หุ้นนางฟ้า"
 
             if active_view == "หุ้นนางฟ้า":
                 st.subheader("หุ้นนางฟ้า 7 อันดับ")
@@ -323,18 +334,9 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                         st.info("ยังไม่พบหุ้นที่มีข้อมูลเพียงพอสำหรับการจัดอันดับ")
                 except Exception as exc:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
-            elif active_view == "Day Trade":
-                st.subheader("Day Trade — หุ้นที่เล็งไว้")
-                st.caption("ใช้รายการเดียวกับแท็บหุ้นที่เล็งไว้ • แนวรับ–แนวต้านจากแท่งราคา 1 ชั่วโมง • กดรีเฟรชหุ้นเมื่อต้องการวิเคราะห์ใหม่")
-                watch_recommendations = st.session_state.get("watch_recommendations", [])
-                if watch_recommendations:
-                    _render_recommendation_cards(st, watch_recommendations, company_names, "watch-hourly")
-                elif watchlist:
-                    st.info("กดรีเฟรชหุ้นเพื่อวิเคราะห์หุ้นที่เล็งไว้ด้วยแท่งราคา 1 ชั่วโมง")
-                else:
-                    st.info("ยังไม่มีหุ้นที่เล็งไว้ — ไปที่แท็บหุ้นที่เล็งไว้เพื่อเพิ่ม ticker")
             else:
                 st.subheader("หุ้นที่เล็งไว้")
+                st.caption("ใช้รายการนี้สำหรับวิเคราะห์ Day Trade ด้วยแนวรับ–แนวต้านจากแท่งราคา 1 ชั่วโมง • กดรีเฟรชหุ้นเมื่อต้องการวิเคราะห์ใหม่")
                 watchlist_options = tuple(sorted(dict.fromkeys(
                     (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *settings.symbols, *watchlist)
                 )))
