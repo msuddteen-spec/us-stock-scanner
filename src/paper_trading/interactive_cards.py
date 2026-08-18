@@ -383,7 +383,7 @@ export default function(component) {
         const button = document.createElement("button"); button.type = "button"; button.className = `suggestion${state.selected.includes(symbol) ? " is-selected" : ""}`;
         const ticker = document.createElement("strong"); ticker.textContent = state.selected.includes(symbol) ? `✓ ${symbol}` : symbol;
         const company = document.createElement("small"); company.textContent = item.name || "";
-        button.append(ticker, company); button.onclick = () => { toggle(symbol); setOpen(true); input.focus(); }; suggestions.appendChild(button);
+        button.append(ticker, company); button.onclick = () => { state.query = ""; toggle(symbol); setOpen(true); input.focus(); }; suggestions.appendChild(button);
       });
     }
   };
