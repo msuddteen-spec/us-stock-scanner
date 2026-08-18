@@ -1,13 +1,5 @@
 [theme]
-base = "dark"
-primaryColor = "#14B8A6"
-backgroundColor = "#0B1428"
-secondaryBackgroundColor = "#14213D"
-textColor = "#E7EEF9"
-borderColor = "#274461"
-linkColor = "#5EEAD4"
-codeBackgroundColor = "#101C33"
-codeTextColor = "#DCEBFF"
+base = "light"
 font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
 headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap"
 codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
@@ -21,6 +13,42 @@ baseRadius = "large"
 buttonRadius = "full"
 showWidgetBorder = true
 showSidebarBorder = false
+
+[theme.light]
+primaryColor = "#0F766E"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F1F5F9"
+textColor = "#122033"
+borderColor = "#D8E2EC"
+linkColor = "#0F766E"
+codeBackgroundColor = "#F1F5F9"
+codeTextColor = "#17324D"
+greenColor = "#15803D"
+orangeColor = "#B45309"
+redColor = "#BE123C"
+blueColor = "#2563EB"
+grayColor = "#64748B"
+chartCategoricalColors = ["#0F766E", "#2563EB", "#7C3AED", "#B45309", "#15803D", "#E11D48"]
+chartSequentialColors = ["#F0FDFA", "#CCFBF1", "#99F6E4", "#5EEAD4", "#2DD4BF", "#14B8A6", "#0D9488", "#0F766E", "#115E59", "#134E4A"]
+dataframeBorderColor = "#D8E2EC"
+dataframeHeaderBackgroundColor = "#F1F5F9"
+
+[theme.light.sidebar]
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#EEF2F7"
+textColor = "#122033"
+borderColor = "#D8E2EC"
+primaryColor = "#0F766E"
+
+[theme.dark]
+primaryColor = "#14B8A6"
+backgroundColor = "#0B1428"
+secondaryBackgroundColor = "#14213D"
+textColor = "#E7EEF9"
+borderColor = "#274461"
+linkColor = "#5EEAD4"
+codeBackgroundColor = "#101C33"
+codeTextColor = "#DCEBFF"
 greenColor = "#34D399"
 orangeColor = "#FBBF24"
 redColor = "#FB7185"
@@ -31,7 +59,7 @@ chartSequentialColors = ["#082F49", "#0C4A6E", "#075985", "#0F766E", "#0D9488", 
 dataframeBorderColor = "#274461"
 dataframeHeaderBackgroundColor = "#14213D"
 
-[theme.sidebar]
+[theme.dark.sidebar]
 backgroundColor = "#08101F"
 secondaryBackgroundColor = "#14213D"
 textColor = "#E7EEF9"
