@@ -261,6 +261,10 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
             scan_symbols = ()
             scan_clicked = False
 
+    def refresh_watchlist_on_timeframe_change() -> None:
+        """Treat a timeframe selection like the main refresh action."""
+        st.session_state["manual_scan_requested"] = True
+
     def refresh_realtime(record_signal: bool = False):
         from .broker import AlpacaPaperBroker
         from .market_data import AlpacaMarketDataAdapter
@@ -344,7 +348,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     st.warning(f"สแกนหุ้นน่าซื้อรายชั่วโมงไม่สำเร็จ: {exc}")
             else:
                 st.subheader("หุ้นที่เล็งไว้")
-                st.caption("ใช้รายการนี้สำหรับวิเคราะห์ Day Trade ด้วยแนวรับ–แนวต้านจากแท่งราคา 1 ชั่วโมง • กดรีเฟรชหุ้นเมื่อต้องการวิเคราะห์ใหม่")
+                st.caption("ใช้รายการนี้สำหรับวิเคราะห์ Day Trade • กดช่วงเวลาเพื่อดึงแนวรับ–แนวต้านใหม่อัตโนมัติ")
                 watchlist_options = tuple(sorted(dict.fromkeys(
                     (*company_names, *DEFAULT_TOP_SYMBOLS, *WATCHLIST_OPTIONS, *settings.symbols, *watchlist)
                 )))
@@ -384,6 +388,7 @@ def run_dashboard(log_path: str = "data/trades.jsonl") -> None:
                     label_visibility="collapsed",
                     width="stretch",
                     key="watchlist_timeframe_selector",
+                    on_change=refresh_watchlist_on_timeframe_change,
                 )
                 loaded_timeframe = st.session_state.get("watch_recommendations_timeframe", "1Hour")
                 if WATCHLIST_TIMEFRAME_CODES.get(selected_timeframe_label) != loaded_timeframe:
