@@ -421,7 +421,12 @@ export default function(component) {
   input.onkeydown = event => {
     if (event.key !== "Enter") return;
     const custom = state.query.trim().toUpperCase();
-    if (/^[A-Z0-9.]{1,10}$/.test(custom) && !optionMap.has(custom)) { state.query = ""; toggle(custom); setOpen(true); }
+    if (!/^[A-Z0-9.]{1,10}$/.test(custom)) return;
+    event.preventDefault();
+    state.query = "";
+    if (!state.selected.includes(custom)) toggle(custom);
+    setOpen(true);
+    input.focus();
   };
   root.onfocusout = event => { if (!root.contains(event.relatedTarget)) setOpen(false); };
   if (restoredFromStorage) setStateValue("symbols", state.selected);
